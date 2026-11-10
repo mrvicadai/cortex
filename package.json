@@ -1,0 +1,31 @@
+{
+  "name": "@mrvicadai/cortex",
+  "version": "0.1.0",
+  "description": "Unified Agent Context Architecture: normative beliefs and episodic project memory for AI coding agents",
+  "bin": {
+    "cortex": "./bin/cortex.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "go build -o bin/cortex ./cmd/cortex",
+    "test": "go test ./...",
+    "start": "node ./bin/cortex.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agent",
+    "ai-agent",
+    "cortex",
+    "beliefs",
+    "fieldnotes",
+    "episodic-memory",
+    "sqlite"
+  ],
+  "author": "Aaron Dai",
+  "license": "MIT"
+}

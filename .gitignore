@@ -1,0 +1,20 @@
+# Binaries
+bin/cortex
+bin/cortex-*
+dist/
+
+# Dependencies
+node_modules/
+
+# SQLite databases & temp files
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+.fieldnotes/
+.cortex/
+
+# OS files
+.DS_Store
