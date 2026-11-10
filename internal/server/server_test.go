@@ -101,6 +101,18 @@ func TestServerToolList(t *testing.T) {
 			t.Errorf("expected belief tool/alias %s was not registered", name)
 		}
 	}
+
+	// Verify Dynamic Tool Reflection in cortex_get_belief description
+	for _, tool := range toolsRes.Tools {
+		if tool.Name == "cortex_get_belief" {
+			if !containsString(tool.Description, "Active topics & triggers") {
+				t.Errorf("expected dynamic router in cortex_get_belief description, got: %s", tool.Description)
+			}
+			if !containsString(tool.Description, "coding-standards") || !containsString(tool.Description, "mr-rules") {
+				t.Errorf("expected topic IDs in description, got: %s", tool.Description)
+			}
+		}
+	}
 }
 
 func TestEpisodicToolsExecution(t *testing.T) {

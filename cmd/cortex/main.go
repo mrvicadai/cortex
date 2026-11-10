@@ -20,7 +20,8 @@ Unified Agent Context Architecture: normative beliefs and persistent episodic me
 
 USAGE:
   cortex                         Start MCP server over stdio transport
-  cortex snippet                 Print ready-to-paste AGENTS.md zero-turn router snippet
+  cortex snippet                 Print zero-drift AGENTS.md dynamic router snippet
+  cortex sync [path]             Update existing AGENTS.md router table in-place
   cortex instructions            Print agent best practices markdown
   cortex --db=<path>             Specify custom SQLite database path
   cortex --additional-beliefs=<dir> Specify custom user override directory for beliefs
@@ -76,6 +77,20 @@ func run(args []string, stdout, stderr io.Writer) error {
 				return err
 			}
 			fmt.Fprintln(stdout, bStore.GetInlineSnippet())
+			return nil
+		case "sync", "--sync":
+			targetPath := "AGENTS.md"
+			if len(args) > 1 {
+				targetPath = args[1]
+			}
+			bStore, err := beliefs.NewStore("")
+			if err != nil {
+				return err
+			}
+			if err := syncFile(targetPath, bStore); err != nil {
+				return err
+			}
+			fmt.Fprintf(stdout, "Successfully synced %s with current beliefs table.\n", targetPath)
 			return nil
 		case "instructions", "--instructions":
 			bStore, err := beliefs.NewStore("")

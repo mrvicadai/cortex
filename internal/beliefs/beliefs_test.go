@@ -161,7 +161,12 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	}
 
 	snippet := store.GetInlineSnippet()
-	if len(snippet) < 200 {
+	if len(snippet) < 100 {
 		t.Errorf("snippet unexpectedly small: %d", len(snippet))
+	}
+
+	rendered := store.GetRenderedTableBlock()
+	if len(rendered) < 300 {
+		t.Errorf("rendered table block unexpectedly small: %d", len(rendered))
 	}
 }

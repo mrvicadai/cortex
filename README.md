@@ -56,41 +56,35 @@ Add to **Settings $\rightarrow$ Features $\rightarrow$ MCP Servers**:
 
 ---
 
-## Zero-Turn Project Router (`AGENTS.md`)
+## Zero-Drift Project Setup (`AGENTS.md`)
 
-Generate a ready-to-paste router block for your project's `AGENTS.md`:
+Generate a compact, drift-free pointer for your project's `AGENTS.md`:
 
 ```bash
 npx -y @mrvicadai/cortex snippet
 ```
 
-This injects the foundational principles (ODAV, Least-to-Most, Project-State) and the 10-topic router table directly into the repo's instructions:
+This outputs an immutable, zero-drift directive:
 
 ```markdown
-<!-- CORTEX_BELIEFS_START -->
-## Agent Operating Beliefs
+<!-- CORTEX_START -->
+## Agent Operating Context (Cortex)
+This repository uses Cortex for behavioral guidance and episodic memory:
+- **Foundations**: Apply ODAV (Observe, Decide, Act, Verify), Least-to-Most subproblem ordering, and active Project Memory.
+- **Guidance on Demand**: The active topic router is declared directly in your 'cortex_get_belief' (or 'beliefs_get') tool definition. Consult relevant topic(s) before writing code, testing, git stacking, designing, or opening MRs. Call 'cortex_list_beliefs' to inspect all topics.
+- **Episodic Memory**: At session start, call 'cortex_context' to confirm project identity. Persist facts with 'cortex_fact_put' and milestones with 'cortex_event_append'.
+<!-- CORTEX_END -->
+```
 
-You operate under core operating principles and progressive topic guidance:
-- **ODAV**: Observe, Decide, Act, Verify. Inspect state and verified facts before acting; test each change.
-- **Least-to-Most**: Decompose complex tasks into small, dependency-ordered, verified subproblems.
-- **Project Memory**: Proactively record verified milestones, facts, and validation results.
+### Why this is scalable:
+1. **Dynamic Tool Schema Reflection**: In the MCP protocol, `cortex_get_belief` and `cortex_list_beliefs` dynamically declare the active topics and triggers directly inside their tool definitions on server handshake. The model receives active topic triggers on **Turn 0** with zero tokens wasted in `AGENTS.md`.
+2. **Never Goes Stale**: Adding topics or configuring local overrides (`--additional-beliefs`) requires zero updates to `AGENTS.md`.
 
-### Task-Triggered Topics Router
-Before planning or executing any of the following tasks, call `beliefs_get(topics: ["<id>"])`:
+### Optional: In-Place Table Sync (`cortex sync`)
+For teams that prefer a rendered markdown table in their repository documentation, use `cortex sync` to update the table between `<!-- CORTEX_BELIEFS_START -->` and `<!-- CORTEX_BELIEFS_END -->` markers in-place:
 
-| Topic ID | Topic Name | When to Call |
-| :--- | :--- | :--- |
-| `coding-standards` | Coding Standards | Before writing, refactoring, or fixing code |
-| `testing` | Testing & Verification | Before defining proof, running verification, or claiming completion |
-| `mr-rules` | Merge Request / Pull Request Rules | Before opening or updating an MR or PR |
-| `git-stacking` | Git Stacking & Topology | Creating worktrees, branch topology, or stacking |
-| `project-design` | Project Design & Technical Specifications | Designing a project, writing an RFC, or technical specification |
-| `walkthrough` | Project Walkthroughs | Authoring a whole-project walkthrough or onboarding explainer |
-| `datadog-query-craft` | Datadog Query Craft & Telemetry | Querying Datadog telemetry, APM traces, error breakdowns, or logs |
-| `premise-check` | Premise Verification | Checking a claimed defect or dependency premise before committing work |
-| `context-hygiene` | Context Hygiene & Token Conservation | Reducing token overhead in MCP queries, tool output, or shell commands |
-| `governance` | Knowledge-Base Governance | Maintaining belief rules or performing self-improvement |
-<!-- CORTEX_BELIEFS_END -->
+```bash
+npx -y @mrvicadai/cortex sync AGENTS.md
 ```
 
 ---

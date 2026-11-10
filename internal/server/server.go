@@ -119,6 +119,15 @@ type BeliefsSearchInput struct {
 	TopKFull      int    `json:"top_k_full,omitempty" jsonschema:"Number of top matching topics to inline (default: 1, max: 5)."`
 }
 
+func formatGetBeliefDescription(b *beliefs.Store) string {
+	var sb strings.Builder
+	sb.WriteString("Retrieve authoritative guidance for one or more topics before executing that task (e.g. before coding, testing, opening MRs, or designing projects). Defaults to accepting an array of topic IDs. Active topics & triggers:\n")
+	for _, t := range b.ListTopics("") {
+		sb.WriteString(fmt.Sprintf("• %s: %s\n", t.ID, t.Trigger))
+	}
+	return sb.String()
+}
+
 func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 	if b == nil {
 		return
@@ -146,7 +155,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 	addTool(s, "cortex_beliefs_bootstrap", listDesc+" (alias for cortex_list_beliefs)", false, listHandler)
 
 	// 8. Get Beliefs (defaults to array of topics)
-	getDesc := "Retrieve authoritative guidance for one or more topics before executing that task (e.g. before coding, testing, opening MRs, or designing projects)."
+	getDesc := formatGetBeliefDescription(b)
 	getHandler := func(ctx context.Context, in GetBeliefsInput) (any, error) {
 		var topicIDs []string
 		if len(in.Topics) > 0 {
