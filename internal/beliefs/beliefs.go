@@ -1,0 +1,466 @@
+package beliefs
+
+import (
+	"embed"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+)
+
+//go:embed embedded/*
+var embeddedFS embed.FS
+
+const PackageVersion = "0.1.0"
+
+type FoundationalPrinciple struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+type TopicMetadata struct {
+	ID      string `json:"topic_id"`
+	Title   string `json:"title"`
+	Trigger string `json:"trigger"`
+	Version string `json:"version"`
+	Origin  string `json:"origin"` // "packaged" | "user_override"
+	Content string `json:"content,omitempty"`
+}
+
+var defaultTopicDefinitions = []struct {
+	id      string
+	title   string
+	trigger string
+	file    string
+}{
+	{
+		id:      "coding-standards",
+		title:   "Coding Standards",
+		trigger: "Before writing, refactoring, or fixing code",
+		file:    "embedded/topics/coding-standards.md",
+	},
+	{
+		id:      "testing",
+		title:   "Testing & Verification",
+		trigger: "Before defining proof, running verification, or claiming completion",
+		file:    "embedded/topics/testing.md",
+	},
+	{
+		id:      "mr-rules",
+		title:   "Merge Request / Pull Request Rules",
+		trigger: "Before opening or updating an MR or PR",
+		file:    "embedded/topics/mr-rules.md",
+	},
+	{
+		id:      "git-stacking",
+		title:   "Git Stacking & Topology",
+		trigger: "Creating worktrees, branch topology, or stacking",
+		file:    "embedded/topics/git-stacking.md",
+	},
+	{
+		id:      "project-design",
+		title:   "Project Design & Technical Specifications",
+		trigger: "Designing a project, writing an RFC, or technical specification",
+		file:    "embedded/topics/project-design.md",
+	},
+	{
+		id:      "walkthrough",
+		title:   "Project Walkthroughs",
+		trigger: "Authoring a whole-project walkthrough or onboarding explainer",
+		file:    "embedded/topics/walkthrough.md",
+	},
+	{
+		id:      "datadog-query-craft",
+		title:   "Datadog Query Craft & Telemetry",
+		trigger: "Querying Datadog telemetry, APM traces, error breakdowns, or logs",
+		file:    "embedded/topics/datadog-query-craft.md",
+	},
+	{
+		id:      "premise-check",
+		title:   "Premise Verification",
+		trigger: "Checking a claimed defect or dependency premise before committing work",
+		file:    "embedded/topics/premise-check.md",
+	},
+	{
+		id:      "context-hygiene",
+		title:   "Context Hygiene & Token Conservation",
+		trigger: "Reducing token overhead in MCP queries, tool output, or shell commands",
+		file:    "embedded/topics/context-hygiene.md",
+	},
+	{
+		id:      "governance",
+		title:   "Knowledge-Base Governance",
+		trigger: "Maintaining belief rules or performing self-improvement",
+		file:    "embedded/topics/governance.md",
+	},
+}
+
+var defaultFoundationalDefinitions = []struct {
+	id    string
+	title string
+	file  string
+}{
+	{
+		id:    "odav",
+		title: "Observe, Decide, Act, Verify (ODAV)",
+		file:  "embedded/foundational/odav.md",
+	},
+	{
+		id:    "least-to-most",
+		title: "Least-to-Most Problem Solving",
+		file:  "embedded/foundational/least-to-most.md",
+	},
+	{
+		id:    "project-state",
+		title: "Project Memory & State Policy",
+		file:  "embedded/foundational/project-state.md",
+	},
+}
+
+type Store struct {
+	mu           sync.RWMutex
+	overrideDir  string
+	foundational []FoundationalPrinciple
+	topics       map[string]TopicMetadata
+	topicOrder   []string
+}
+
+func NewStore(overrideDir string) (*Store, error) {
+	if overrideDir == "" {
+		overrideDir = os.Getenv("CORTEX_ADDITIONAL_BELIEFS")
+	}
+
+	s := &Store{
+		overrideDir: overrideDir,
+		topics:      make(map[string]TopicMetadata),
+	}
+
+	// 1. Load foundational principles
+	for _, f := range defaultFoundationalDefinitions {
+		data, err := embeddedFS.ReadFile(f.file)
+		if err != nil {
+			return nil, fmt.Errorf("reading embedded foundational %s: %w", f.file, err)
+		}
+		s.foundational = append(s.foundational, FoundationalPrinciple{
+			ID:      f.id,
+			Title:   f.title,
+			Content: strings.TrimSpace(string(data)),
+		})
+	}
+
+	// 2. Load embedded topics
+	for _, t := range defaultTopicDefinitions {
+		data, err := embeddedFS.ReadFile(t.file)
+		if err != nil {
+			return nil, fmt.Errorf("reading embedded topic %s: %w", t.file, err)
+		}
+		s.topics[t.id] = TopicMetadata{
+			ID:      t.id,
+			Title:   t.title,
+			Trigger: t.trigger,
+			Version: PackageVersion,
+			Origin:  "packaged",
+			Content: strings.TrimSpace(string(data)),
+		}
+		s.topicOrder = append(s.topicOrder, t.id)
+	}
+
+	// 3. Scan user overrides if directory configured
+	if overrideDir != "" {
+		if err := s.loadOverrides(overrideDir); err != nil {
+			// Log or return error
+			return nil, fmt.Errorf("loading overrides from %s: %w", overrideDir, err)
+		}
+	}
+
+	return s, nil
+}
+
+func (s *Store) loadOverrides(dir string) error {
+	info, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("override path %s is not a directory", dir)
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+		topicID := strings.TrimSuffix(entry.Name(), ".md")
+		fullPath := filepath.Join(dir, entry.Name())
+		contentBytes, err := os.ReadFile(fullPath)
+		if err != nil {
+			return err
+		}
+		content := strings.TrimSpace(string(contentBytes))
+
+		title := topicID
+		trigger := "Custom user override belief"
+
+		// Extract first markdown header for title if present
+		lines := strings.Split(content, "\n")
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "# ") {
+				title = strings.TrimSpace(strings.TrimPrefix(trimmed, "# "))
+				break
+			}
+		}
+
+		existing, found := s.topics[topicID]
+		if found {
+			title = existing.Title
+			trigger = existing.Trigger
+		} else {
+			s.topicOrder = append(s.topicOrder, topicID)
+		}
+
+		s.topics[topicID] = TopicMetadata{
+			ID:      topicID,
+			Title:   title,
+			Trigger: trigger,
+			Version: PackageVersion + "-override",
+			Origin:  "user_override",
+			Content: content,
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) ListTopics(query string) []TopicMetadata {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []TopicMetadata
+	tokens := tokenize(query)
+
+	for _, id := range s.topicOrder {
+		topic, exists := s.topics[id]
+		if !exists {
+			continue
+		}
+		if len(tokens) == 0 || matchesTokens(topic, tokens) {
+			result = append(result, TopicMetadata{
+				ID:      topic.ID,
+				Title:   topic.Title,
+				Trigger: topic.Trigger,
+				Version: topic.Version,
+				Origin:  topic.Origin,
+			})
+		}
+	}
+
+	return result
+}
+
+func (s *Store) GetTopics(topicIDs []string) ([]TopicMetadata, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []TopicMetadata
+	for _, id := range topicIDs {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		topic, exists := s.topics[id]
+		if !exists {
+			return nil, fmt.Errorf("topic '%s' not found. Available topics: %s", id, strings.Join(s.topicOrder, ", "))
+		}
+		result = append(result, topic)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("no topic specified. Available topics: %s", strings.Join(s.topicOrder, ", "))
+	}
+
+	return result, nil
+}
+
+type SearchMatch struct {
+	TopicID     string `json:"topic_id"`
+	Title       string `json:"title"`
+	Trigger     string `json:"trigger"`
+	MatchedLine string `json:"matched_line,omitempty"`
+	Score       int    `json:"score"`
+}
+
+type SearchResult struct {
+	Matches       []SearchMatch   `json:"matches"`
+	InlineContent []TopicMetadata `json:"inline_content,omitempty"`
+}
+
+func (s *Store) SearchTopics(query string, inlineContent bool, topK int) SearchResult {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	tokens := tokenize(query)
+	if len(tokens) == 0 {
+		return SearchResult{}
+	}
+
+	var matches []SearchMatch
+	for _, id := range s.topicOrder {
+		topic := s.topics[id]
+		score := 0
+		lowerID := strings.ToLower(topic.ID)
+		lowerTitle := strings.ToLower(topic.Title)
+		lowerTrigger := strings.ToLower(topic.Trigger)
+
+		for _, token := range tokens {
+			if strings.Contains(lowerID, token) {
+				score += 10
+			}
+			if strings.Contains(lowerTitle, token) {
+				score += 8
+			}
+			if strings.Contains(lowerTrigger, token) {
+				score += 5
+			}
+		}
+
+		lines := strings.Split(topic.Content, "\n")
+		var bestMatchedLine string
+
+		for _, line := range lines {
+			lowerLine := strings.ToLower(line)
+			lineMatches := 0
+			for _, token := range tokens {
+				if strings.Contains(lowerLine, token) {
+					lineMatches++
+				}
+			}
+			if lineMatches > 0 {
+				score += lineMatches * 2
+				if bestMatchedLine == "" && len(strings.TrimSpace(line)) > 10 {
+					bestMatchedLine = strings.TrimSpace(line)
+				}
+			}
+		}
+
+		if score > 0 {
+			matches = append(matches, SearchMatch{
+				TopicID:     topic.ID,
+				Title:       topic.Title,
+				Trigger:     topic.Trigger,
+				MatchedLine: bestMatchedLine,
+				Score:       score,
+			})
+		}
+	}
+
+	sort.Slice(matches, func(i, j int) bool {
+		return matches[i].Score > matches[j].Score
+	})
+
+	if len(matches) > 5 {
+		matches = matches[:5]
+	}
+
+	res := SearchResult{Matches: matches}
+
+	if inlineContent && len(matches) > 0 {
+		if topK <= 0 {
+			topK = 1
+		}
+		if topK > len(matches) {
+			topK = len(matches)
+		}
+		for i := 0; i < topK; i++ {
+			t := s.topics[matches[i].TopicID]
+			res.InlineContent = append(res.InlineContent, t)
+		}
+	}
+
+	return res
+}
+
+func (s *Store) GetBootstrapPayload() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var sb strings.Builder
+	sb.WriteString("# Cortex Agent Context: Beliefs Bootstrap\n\n")
+	sb.WriteString("You are operating under the following foundational principles and topic guidance.\n\n")
+	sb.WriteString("## Foundational Operating Principles (Always Active)\n\n")
+
+	for i, p := range s.foundational {
+		sb.WriteString(fmt.Sprintf("### %s\n\n%s\n\n", p.Title, p.Content))
+		if i+1 < len(s.foundational) {
+			sb.WriteString("---\n\n")
+		}
+	}
+
+	sb.WriteString("---\n\n## Task-Triggered Topics Router\n\n")
+	sb.WriteString("Before planning or executing any of the following tasks, call `beliefs_get(topics: [\"<id>\"])` to retrieve authoritative instructions:\n\n")
+	sb.WriteString("| Topic ID | Topic Name | When to Call |\n")
+	sb.WriteString("| :--- | :--- | :--- |\n")
+
+	for _, id := range s.topicOrder {
+		t := s.topics[id]
+		sb.WriteString(fmt.Sprintf("| `%s` | %s | %s |\n", t.ID, t.Title, t.Trigger))
+	}
+
+	sb.WriteString("\n### Usage Instruction\n")
+	sb.WriteString("- When entering a task phase, call `beliefs_get(topics: [\"<id>\"])` (or `cortex_get_belief`). Batch multiple topics when crossing boundaries.\n")
+	sb.WriteString("- Use `beliefs_search(query: \"<text>\")` with `inline_content: true` to instantly find and retrieve relevant rules.\n")
+
+	return sb.String()
+}
+
+func (s *Store) GetInlineSnippet() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var sb strings.Builder
+	sb.WriteString("<!-- CORTEX_BELIEFS_START -->\n")
+	sb.WriteString("## Agent Operating Beliefs\n\n")
+	sb.WriteString("You operate under core operating principles and progressive topic guidance:\n")
+	sb.WriteString("- **ODAV**: Observe, Decide, Act, Verify. Inspect state and verified facts before acting; test each change.\n")
+	sb.WriteString("- **Least-to-Most**: Decompose complex tasks into small, dependency-ordered, verified subproblems.\n")
+	sb.WriteString("- **Project Memory**: Proactively record verified milestones, facts, and validation results.\n\n")
+	sb.WriteString("### Task-Triggered Topics Router\n")
+	sb.WriteString("Before planning or executing any of the following tasks, call `beliefs_get(topics: [\"<id>\"])`:\n\n")
+	sb.WriteString("| Topic ID | Topic Name | When to Call |\n")
+	sb.WriteString("| :--- | :--- | :--- |\n")
+
+	for _, id := range s.topicOrder {
+		t := s.topics[id]
+		sb.WriteString(fmt.Sprintf("| `%s` | %s | %s |\n", t.ID, t.Title, t.Trigger))
+	}
+
+	sb.WriteString("\n*Usage*: Call `beliefs_get(topics: [\"<id>\"])` when entering a task phase. Use `beliefs_search(query: \"<text>\")` to search rules, or `beliefs_bootstrap` for full operating principles.\n")
+	sb.WriteString("<!-- CORTEX_BELIEFS_END -->\n")
+
+	return sb.String()
+}
+
+func tokenize(query string) []string {
+	fields := strings.Fields(strings.ToLower(strings.TrimSpace(query)))
+	return fields
+}
+
+func matchesTokens(topic TopicMetadata, tokens []string) bool {
+	combined := strings.ToLower(fmt.Sprintf("%s %s %s", topic.ID, topic.Title, topic.Trigger))
+	for _, token := range tokens {
+		if strings.Contains(combined, token) {
+			return true
+		}
+	}
+	return false
+}
