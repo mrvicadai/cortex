@@ -1,7 +1,8 @@
 {
   "name": "@mrvicadai/cortex",
   "version": "0.1.0",
-  "description": "Unified Agent Context Architecture: normative beliefs and episodic project memory for AI coding agents",
+  "type": "module",
+  "description": "Unified Agent Context Architecture: normative beliefs and persistent episodic memory for AI coding agents",
   "bin": {
     "cortex": "./bin/cortex.js"
   },
