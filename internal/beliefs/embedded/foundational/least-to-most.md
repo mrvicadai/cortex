@@ -14,7 +14,7 @@ Keep trivial tasks direct rather than inventing unnecessary subproblems.
 
 Solve the simplest ready subproblem using the [ODAV loop](odav.md).
 Verify its result before using it as a premise or building a dependent slice on it.
-Commit each independently verified slice as a focused checkpoint before building the next dependent subproblem on it, unless explicitly instructed not to commit; do not accumulate multiple completed slices into a single end-of-task commit.
+**MANDATORY SLICE COMMIT**: You MUST commit each independently verified slice as a focused checkpoint (`git add` + `git commit -m "<type>: <action>"`) before beginning the next dependent subproblem, unless explicitly told not to commit. Do NOT accumulate multiple verified slices into a single end-of-task commit.
 Carry verified findings and reusable intermediate results into the next, more complex subproblem instead of re-deriving them.
 Revise the remaining decomposition when new evidence invalidates a dependency or assumption.
 Stop and resolve a failed prerequisite rather than building on an unverified result.
@@ -22,4 +22,5 @@ Stop and resolve a failed prerequisite rather than building on an unverified res
 ## Integrate
 
 Verify the combined result against the original outcome and constraints; individually passing slices do not establish integration correctness.
+**MANDATORY COMPLETION GATE**: Confirm `git status` is clean. You MUST NOT claim the task is complete or hand off to the user with uncommitted changes unless the user explicitly instructed not to commit.
 Report remaining unknowns and unmet criteria without claiming the whole task is complete.
