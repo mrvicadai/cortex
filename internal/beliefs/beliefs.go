@@ -197,23 +197,32 @@ func (s *Store) loadOverrides(dir string) error {
 		return fmt.Errorf("override path %s is not a directory", dir)
 	}
 
-	return filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+	nestedDomains := make(map[string][]string)
+
+	err = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() || !strings.HasSuffix(d.Name(), ".md") {
 			return nil
 		}
-		return s.loadOverrideFile(dir, path)
+		return s.loadOverrideFile(dir, path, nestedDomains)
 	})
+	if err != nil {
+		return err
+	}
+
+	s.synthesizeDomainRouters(nestedDomains)
+	return nil
 }
 
-func (s *Store) loadOverrideFile(baseDir, fullPath string) error {
+func (s *Store) loadOverrideFile(baseDir, fullPath string, nestedDomains map[string][]string) error {
 	relPath, err := filepath.Rel(baseDir, fullPath)
 	if err != nil {
 		return err
 	}
-	defaultID := strings.TrimSuffix(filepath.ToSlash(relPath), ".md")
+	slashPath := filepath.ToSlash(relPath)
+	defaultID := strings.TrimSuffix(slashPath, ".md")
 
 	contentBytes, err := os.ReadFile(fullPath)
 	if err != nil {
@@ -221,11 +230,18 @@ func (s *Store) loadOverrideFile(baseDir, fullPath string) error {
 	}
 
 	meta, content := parseOverrideMarkdown(defaultID, string(contentBytes))
-	s.registerOverride(meta, content)
+	isNested := strings.Contains(slashPath, "/")
+
+	if isNested {
+		domain := strings.Split(slashPath, "/")[0]
+		nestedDomains[domain] = append(nestedDomains[domain], meta.ID)
+	}
+
+	s.registerOverride(meta, content, isNested)
 	return nil
 }
 
-func (s *Store) registerOverride(meta TopicMetadata, content string) {
+func (s *Store) registerOverride(meta TopicMetadata, content string, isNested bool) {
 	existing, found := s.topics[meta.ID]
 	title := meta.Title
 	trigger := meta.Trigger
@@ -237,7 +253,7 @@ func (s *Store) registerOverride(meta TopicMetadata, content string) {
 		if trigger == "Custom user override belief" {
 			trigger = existing.Trigger
 		}
-	} else {
+	} else if !isNested {
 		s.topicOrder = append(s.topicOrder, meta.ID)
 	}
 
@@ -249,6 +265,58 @@ func (s *Store) registerOverride(meta TopicMetadata, content string) {
 		Origin:  "user_override",
 		Content: content,
 	}
+}
+
+func (s *Store) synthesizeDomainRouters(nestedDomains map[string][]string) {
+	var domains []string
+	for d := range nestedDomains {
+		domains = append(domains, d)
+	}
+	sort.Strings(domains)
+
+	for _, domain := range domains {
+		if _, exists := s.topics[domain]; exists {
+			continue // Author provided explicit top-level domain router (e.g. security.md)
+		}
+
+		children := nestedDomains[domain]
+		routerContent := s.buildDomainRouterContent(domain, children)
+
+		meta := TopicMetadata{
+			ID:      domain,
+			Title:   formatDomainTitle(domain),
+			Trigger: fmt.Sprintf("Before working in the %s domain or with %s sub-rules", domain, domain),
+			Version: PackageVersion + "-override",
+			Origin:  "user_override",
+			Content: routerContent,
+		}
+
+		s.topics[domain] = meta
+		s.topicOrder = append(s.topicOrder, domain)
+	}
+}
+
+func (s *Store) buildDomainRouterContent(domain string, children []string) string {
+	var sb strings.Builder
+	title := formatDomainTitle(domain)
+	sb.WriteString(fmt.Sprintf("# %s\n\n", title))
+	sb.WriteString(fmt.Sprintf("Scope: Domain router for `%s`. Call `beliefs_get(topics: [\"<sub-topic-id>\"])` to retrieve specific sub-rules.\n\n", domain))
+	sb.WriteString("## Sub-Topics Router\n\n")
+	sb.WriteString("| Sub-Topic ID | Title | When to Call |\n")
+	sb.WriteString("| :--- | :--- | :--- |\n")
+
+	for _, childID := range children {
+		child := s.topics[childID]
+		sb.WriteString(fmt.Sprintf("| `%s` | %s | %s |\n", child.ID, child.Title, child.Trigger))
+	}
+	return sb.String()
+}
+
+func formatDomainTitle(domain string) string {
+	if len(domain) == 0 {
+		return "Domain Router"
+	}
+	return strings.ToUpper(domain[:1]) + domain[1:] + " (Domain Router)"
 }
 
 func parseOverrideMarkdown(defaultID, raw string) (TopicMetadata, string) {

@@ -134,7 +134,7 @@ export CORTEX_ADDITIONAL_BELIEFS=~/additional_beliefs
 ```
 
 ### Features:
-- **Hierarchical / Nested Scanning**: Subdirectories are recursively scanned (e.g. `security/secrets.md` $\rightarrow$ `topic_id: "security/secrets"`).
+- **Fractal Two-Tier Discovery**: Subdirectories are indexed in memory for fast on-demand retrieval and search, while the initial bootstrap router table stays strictly bounded to top-level domain routers to prevent context bloat.
 - **Overrides & Additions**: Any file matching a standard topic ID (e.g. `coding-standards.md`) overrides the packaged rule and reports `origin: "user_override"`. New files append as custom team topics.
 - **YAML Frontmatter**: Optionally specify `id`, `title`, and dynamic `trigger` routing:
   ```markdown

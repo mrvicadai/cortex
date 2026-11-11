@@ -162,8 +162,29 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 15 { // 11 original + 1 custom-cloud + 1 security/secrets + 1 k8s-infra + 1 payments-compliance
-		t.Fatalf("expected 15 topics with custom overrides, got %d", len(topics))
+	if len(topics) != 15 { // 11 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 15 topics in root router, got %d", len(topics))
+	}
+
+	// Verify root router contains domain routers, NOT raw nested sub-topics
+	topicMap := make(map[string]bool)
+	for _, tMeta := range topics {
+		topicMap[tMeta.ID] = true
+	}
+	if topicMap["security/secrets"] || topicMap["k8s-infra"] {
+		t.Errorf("nested sub-topics should not appear in root router table")
+	}
+	if !topicMap["security"] || !topicMap["infra"] {
+		t.Errorf("domain routers 'security' and 'infra' should appear in root router table")
+	}
+
+	// Verify synthesized domain router content
+	routerGot, err := store.GetTopics([]string{"security"})
+	if err != nil {
+		t.Fatalf("getting synthesized security domain router: %v", err)
+	}
+	if !strings.Contains(routerGot[0].Content, "Sub-Topics Router") || !strings.Contains(routerGot[0].Content, "security/secrets") {
+		t.Errorf("expected synthesized router table to list sub-topics, got: %s", routerGot[0].Content)
 	}
 
 	// Verify overridden topic
@@ -215,6 +236,25 @@ func TestUserOverrides(t *testing.T) {
 	}
 	if quotedGot[0].Content != "# PCI Compliance\nNever log PAN." {
 		t.Errorf("expected parsed content, got %q", quotedGot[0].Content)
+	}
+
+	// 6. Verify that an explicit author-provided domain router overrides auto-synthesizer
+	authorRouterFile := filepath.Join(tempDir, "security.md")
+	authorContent := "# Custom Security Index\n\nHand-crafted author security router."
+	if err := os.WriteFile(authorRouterFile, []byte(authorContent), 0600); err != nil {
+		t.Fatalf("writing author router file: %v", err)
+	}
+
+	storeWithExplicit, err := beliefs.NewStore(tempDir)
+	if err != nil {
+		t.Fatalf("failed to reload store: %v", err)
+	}
+	explicitGot, err := storeWithExplicit.GetTopics([]string{"security"})
+	if err != nil {
+		t.Fatalf("getting explicit security topic: %v", err)
+	}
+	if explicitGot[0].Content != authorContent {
+		t.Errorf("expected author-provided domain router content, got: %s", explicitGot[0].Content)
 	}
 }
 

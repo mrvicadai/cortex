@@ -8,6 +8,13 @@ Scope: Authoring custom team and enterprise beliefs in `--additional-beliefs` di
 - The relative path becomes the `topic_id` (e.g. `security/secrets.md` → `topic_id: "security/secrets"`).
 - To replace a built-in belief (e.g. `coding-standards`), match its filename (`coding-standards.md`).
 
+## Fractal routing (Two-Tier discovery)
+
+To prevent context bloat and wire budget blowout in large knowledge bases:
+- **Root Topics (Top-Level)**: Only `.md` files at the root of the folder appear in the initial `cortex_bootstrap` router table.
+- **Sub-Topics (Nested)**: Files in subdirectories are indexed in memory for fast retrieval (`cortex_get_belief`) and full-text search (`cortex_beliefs_search`), but are excluded from the root bootstrap table.
+- **Domain Routers**: Place a top-level `.md` file matching the folder name (e.g. `security.md` for `security/`) to serve as a domain sub-router. If omitted, Cortex automatically synthesizes a domain router listing the sub-topics.
+
 ## YAML frontmatter specification
 
 Declare topic metadata at the very top of the `.md` file using a YAML frontmatter block:
