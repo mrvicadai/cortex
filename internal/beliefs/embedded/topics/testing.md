@@ -52,3 +52,8 @@ A read-path guard that only subtracts behavior can regress existing callers; fin
 ## Behavior preservation
 
 Verify behavior-preserving claims against real consumers and current-world cases; do not promote an untested hypothesis into a no-op assertion.
+
+## Completion gate
+
+Passing tests prove correctness; committing preserves proof.
+MUST NOT claim a task or bug fix is tested, verified, or complete while modified files remain uncommitted in `git status`, unless the user explicitly instructed not to commit.
