@@ -258,7 +258,7 @@ func registerResourcesAndPrompts(s *mcp.Server, nb *notebook.Store, b *beliefs.S
 			MIMEType:    "text/markdown",
 		}, func(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 			uri := req.Params.URI
-			topicID := uri[strings.LastIndex(uri, "/")+1:]
+			topicID := strings.TrimPrefix(uri, "cortex://beliefs/")
 			topics, err := b.GetTopics([]string{topicID})
 			if err != nil || len(topics) == 0 {
 				return nil, fmt.Errorf("belief topic not found: %s", topicID)

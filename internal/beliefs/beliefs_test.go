@@ -114,14 +114,36 @@ func TestUserOverrides(t *testing.T) {
 		t.Fatalf("writing custom file: %v", err)
 	}
 
+	// 3. Add nested directory topic: security/secrets.md
+	secDir := filepath.Join(tempDir, "security")
+	if err := os.MkdirAll(secDir, 0700); err != nil {
+		t.Fatalf("creating security dir: %v", err)
+	}
+	nestedSecFile := filepath.Join(secDir, "secrets.md")
+	nestedSecContent := "# Corporate Secrets\n\nNever commit tokens to git."
+	if err := os.WriteFile(nestedSecFile, []byte(nestedSecContent), 0600); err != nil {
+		t.Fatalf("writing nested file: %v", err)
+	}
+
+	// 4. Add nested directory topic with frontmatter: infra/k8s.md
+	infraDir := filepath.Join(tempDir, "infra")
+	if err := os.MkdirAll(infraDir, 0700); err != nil {
+		t.Fatalf("creating infra dir: %v", err)
+	}
+	nestedInfraFile := filepath.Join(infraDir, "k8s.md")
+	nestedInfraContent := "---\nid: k8s-infra\ntitle: Kubernetes Infrastructure\ntrigger: Before editing helm charts or deployment yamls\n---\n# K8s Standards\n\nAlways specify resource limits."
+	if err := os.WriteFile(nestedInfraFile, []byte(nestedInfraContent), 0600); err != nil {
+		t.Fatalf("writing nested infra file: %v", err)
+	}
+
 	store, err := beliefs.NewStore(tempDir)
 	if err != nil {
 		t.Fatalf("failed to create beliefs store with overrides: %v", err)
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 11 { // 10 original + 1 new custom
-		t.Fatalf("expected 11 topics with custom override, got %d", len(topics))
+	if len(topics) != 13 { // 10 original + 1 custom-cloud + 1 security/secrets + 1 k8s-infra
+		t.Fatalf("expected 13 topics with custom overrides, got %d", len(topics))
 	}
 
 	// Verify overridden topic
@@ -146,6 +168,33 @@ func TestUserOverrides(t *testing.T) {
 	}
 	if customGot[0].Content != customContent {
 		t.Errorf("expected custom content, got %s", customGot[0].Content)
+	}
+
+	// Verify nested topic without frontmatter
+	secGot, err := store.GetTopics([]string{"security/secrets"})
+	if err != nil {
+		t.Fatalf("getting nested security topic: %v", err)
+	}
+	if secGot[0].Title != "Corporate Secrets" {
+		t.Errorf("expected title 'Corporate Secrets', got %s", secGot[0].Title)
+	}
+	if secGot[0].Content != nestedSecContent {
+		t.Errorf("expected nested content, got %s", secGot[0].Content)
+	}
+
+	// Verify nested topic with frontmatter
+	infraGot, err := store.GetTopics([]string{"k8s-infra"})
+	if err != nil {
+		t.Fatalf("getting nested infra topic: %v", err)
+	}
+	if infraGot[0].Title != "Kubernetes Infrastructure" {
+		t.Errorf("expected title 'Kubernetes Infrastructure', got %s", infraGot[0].Title)
+	}
+	if infraGot[0].Trigger != "Before editing helm charts or deployment yamls" {
+		t.Errorf("expected trigger from frontmatter, got %s", infraGot[0].Trigger)
+	}
+	if infraGot[0].Content != "# K8s Standards\n\nAlways specify resource limits." {
+		t.Errorf("expected parsed markdown content without frontmatter, got %s", infraGot[0].Content)
 	}
 }
 

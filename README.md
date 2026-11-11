@@ -123,7 +123,7 @@ Cortex enforces strict zero-duplication: each capability exposes exactly one can
 
 ## Custom Belief Overrides (`--additional-beliefs`)
 
-Users can override standard packaged beliefs or define new team rules:
+Users and organizations can override standard packaged beliefs or define new team rules:
 
 ```bash
 npx -y @mrvicadai/cortex --additional-beliefs=~/additional_beliefs
@@ -133,7 +133,18 @@ or via environment variable:
 export CORTEX_ADDITIONAL_BELIEFS=~/additional_beliefs
 ```
 
-Any `.md` file matching a standard topic ID (e.g. `coding-standards.md`) will override the packaged rule and report `origin: "user_override"`. New files will append as custom team topics.
+### Features:
+- **Hierarchical / Nested Scanning**: Subdirectories are recursively scanned (e.g. `security/secrets.md` $\rightarrow$ `topic_id: "security/secrets"`).
+- **Overrides & Additions**: Any file matching a standard topic ID (e.g. `coding-standards.md`) overrides the packaged rule and reports `origin: "user_override"`. New files append as custom team topics.
+- **YAML Frontmatter**: Optionally specify `id`, `title`, and dynamic `trigger` routing:
+  ```markdown
+  ---
+  id: k8s-infra
+  title: Kubernetes Infrastructure
+  trigger: Before editing helm charts or deployment yamls
+  ---
+  # K8s Guidelines...
+  ```
 
 ---
 

@@ -191,55 +191,110 @@ func (s *Store) loadOverrides(dir string) error {
 		return fmt.Errorf("override path %s is not a directory", dir)
 	}
 
-	entries, err := os.ReadDir(dir)
+	return filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".md") {
+			return nil
+		}
+		return s.loadOverrideFile(dir, path)
+	})
+}
+
+func (s *Store) loadOverrideFile(baseDir, fullPath string) error {
+	relPath, err := filepath.Rel(baseDir, fullPath)
+	if err != nil {
+		return err
+	}
+	defaultID := strings.TrimSuffix(filepath.ToSlash(relPath), ".md")
+
+	contentBytes, err := os.ReadFile(fullPath)
 	if err != nil {
 		return err
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
-			continue
-		}
-		topicID := strings.TrimSuffix(entry.Name(), ".md")
-		fullPath := filepath.Join(dir, entry.Name())
-		contentBytes, err := os.ReadFile(fullPath)
-		if err != nil {
-			return err
-		}
-		content := strings.TrimSpace(string(contentBytes))
+	meta, content := parseOverrideMarkdown(defaultID, string(contentBytes))
+	s.registerOverride(meta, content)
+	return nil
+}
 
-		title := topicID
-		trigger := "Custom user override belief"
+func (s *Store) registerOverride(meta TopicMetadata, content string) {
+	existing, found := s.topics[meta.ID]
+	title := meta.Title
+	trigger := meta.Trigger
 
-		// Extract first markdown header for title if present
-		lines := strings.Split(content, "\n")
-		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "# ") {
-				title = strings.TrimSpace(strings.TrimPrefix(trimmed, "# "))
-				break
-			}
-		}
-
-		existing, found := s.topics[topicID]
-		if found {
+	if found {
+		if title == meta.ID {
 			title = existing.Title
+		}
+		if trigger == "Custom user override belief" {
 			trigger = existing.Trigger
-		} else {
-			s.topicOrder = append(s.topicOrder, topicID)
 		}
-
-		s.topics[topicID] = TopicMetadata{
-			ID:      topicID,
-			Title:   title,
-			Trigger: trigger,
-			Version: PackageVersion + "-override",
-			Origin:  "user_override",
-			Content: content,
-		}
+	} else {
+		s.topicOrder = append(s.topicOrder, meta.ID)
 	}
 
-	return nil
+	s.topics[meta.ID] = TopicMetadata{
+		ID:      meta.ID,
+		Title:   title,
+		Trigger: trigger,
+		Version: PackageVersion + "-override",
+		Origin:  "user_override",
+		Content: content,
+	}
+}
+
+func parseOverrideMarkdown(defaultID, raw string) (TopicMetadata, string) {
+	raw = strings.TrimSpace(raw)
+	meta := TopicMetadata{
+		ID:      defaultID,
+		Title:   defaultID,
+		Trigger: "Custom user override belief",
+	}
+
+	content := raw
+	if strings.HasPrefix(raw, "---\n") || strings.HasPrefix(raw, "---\r\n") {
+		meta, content = extractFrontmatter(raw, meta)
+	}
+
+	if meta.Title == defaultID {
+		meta.Title = extractHeaderTitle(content, defaultID)
+	}
+
+	return meta, strings.TrimSpace(content)
+}
+
+func extractFrontmatter(raw string, base TopicMetadata) (TopicMetadata, string) {
+	endIdx := strings.Index(raw[3:], "\n---")
+	if endIdx == -1 {
+		return base, raw
+	}
+	fmBody := raw[3 : 3+endIdx]
+	rest := strings.TrimPrefix(raw[3+endIdx+4:], "\n")
+	rest = strings.TrimPrefix(rest, "\r\n")
+
+	for _, line := range strings.Split(fmBody, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "id:") {
+			base.ID = strings.TrimSpace(strings.TrimPrefix(line, "id:"))
+		} else if strings.HasPrefix(line, "title:") {
+			base.Title = strings.TrimSpace(strings.TrimPrefix(line, "title:"))
+		} else if strings.HasPrefix(line, "trigger:") {
+			base.Trigger = strings.TrimSpace(strings.TrimPrefix(line, "trigger:"))
+		}
+	}
+	return base, rest
+}
+
+func extractHeaderTitle(content, fallback string) string {
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "# ") {
+			return strings.TrimSpace(strings.TrimPrefix(trimmed, "# "))
+		}
+	}
+	return fallback
 }
 
 func (s *Store) ListTopics(query string) []TopicMetadata {
