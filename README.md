@@ -145,6 +145,7 @@ export CORTEX_ADDITIONAL_BELIEFS=~/additional_beliefs
   ---
   # K8s Guidelines...
   ```
+- **Authoring Guide Topic**: Call `cortex_get_belief(topics: ["custom-beliefs"])` anytime to load the complete specification.
 
 ---
 

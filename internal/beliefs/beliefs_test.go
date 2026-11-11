@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 10 {
-		t.Fatalf("expected 10 default topics, got %d", len(topics))
+	if len(topics) != 11 {
+		t.Fatalf("expected 11 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -27,6 +27,18 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		if topic.Version != "0.1.0" {
 			t.Errorf("expected version '0.1.0', got %s for topic %s", topic.Version, topic.ID)
 		}
+	}
+
+	// Verify custom-beliefs topic exists and has valid instructions
+	cb, err := store.GetTopics([]string{"custom-beliefs"})
+	if err != nil {
+		t.Fatalf("getting custom-beliefs topic: %v", err)
+	}
+	if cb[0].Title != "Custom Belief Authoring" {
+		t.Errorf("expected title 'Custom Belief Authoring', got %s", cb[0].Title)
+	}
+	if !strings.Contains(cb[0].Content, "YAML frontmatter") {
+		t.Errorf("expected custom-beliefs content to mention YAML frontmatter")
 	}
 }
 
@@ -137,14 +149,21 @@ func TestUserOverrides(t *testing.T) {
 		t.Fatalf("writing nested infra file: %v", err)
 	}
 
+	// 5. Add custom topic with quoted frontmatter values
+	quotedFile := filepath.Join(tempDir, "payments.md")
+	quotedContent := "---\nid: \"payments-compliance\"\ntitle: 'Payment Card Security'\ntrigger: \"When handling credit card numbers or processing payments\"\n---\n# PCI Compliance\nNever log PAN."
+	if err := os.WriteFile(quotedFile, []byte(quotedContent), 0600); err != nil {
+		t.Fatalf("writing quoted file: %v", err)
+	}
+
 	store, err := beliefs.NewStore(tempDir)
 	if err != nil {
 		t.Fatalf("failed to create beliefs store with overrides: %v", err)
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 13 { // 10 original + 1 custom-cloud + 1 security/secrets + 1 k8s-infra
-		t.Fatalf("expected 13 topics with custom overrides, got %d", len(topics))
+	if len(topics) != 15 { // 11 original + 1 custom-cloud + 1 security/secrets + 1 k8s-infra + 1 payments-compliance
+		t.Fatalf("expected 15 topics with custom overrides, got %d", len(topics))
 	}
 
 	// Verify overridden topic
@@ -183,19 +202,19 @@ func TestUserOverrides(t *testing.T) {
 		t.Errorf("expected nested content, got %s", secGot[0].Content)
 	}
 
-	// Verify nested topic with frontmatter
-	infraGot, err := store.GetTopics([]string{"k8s-infra"})
+	// Verify quoted frontmatter parsing
+	quotedGot, err := store.GetTopics([]string{"payments-compliance"})
 	if err != nil {
-		t.Fatalf("getting nested infra topic: %v", err)
+		t.Fatalf("getting quoted payments topic: %v", err)
 	}
-	if infraGot[0].Title != "Kubernetes Infrastructure" {
-		t.Errorf("expected title 'Kubernetes Infrastructure', got %s", infraGot[0].Title)
+	if quotedGot[0].Title != "Payment Card Security" {
+		t.Errorf("expected title without quotes 'Payment Card Security', got %q", quotedGot[0].Title)
 	}
-	if infraGot[0].Trigger != "Before editing helm charts or deployment yamls" {
-		t.Errorf("expected trigger from frontmatter, got %s", infraGot[0].Trigger)
+	if quotedGot[0].Trigger != "When handling credit card numbers or processing payments" {
+		t.Errorf("expected trigger without quotes, got %q", quotedGot[0].Trigger)
 	}
-	if infraGot[0].Content != "# K8s Standards\n\nAlways specify resource limits." {
-		t.Errorf("expected parsed markdown content without frontmatter, got %s", infraGot[0].Content)
+	if quotedGot[0].Content != "# PCI Compliance\nNever log PAN." {
+		t.Errorf("expected parsed content, got %q", quotedGot[0].Content)
 	}
 }
 

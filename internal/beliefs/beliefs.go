@@ -96,6 +96,12 @@ var defaultTopicDefinitions = []struct {
 		trigger: "Maintaining belief rules or performing self-improvement",
 		file:    "embedded/topics/governance.md",
 	},
+	{
+		id:      "custom-beliefs",
+		title:   "Custom Belief Authoring",
+		trigger: "Before adding or authoring custom markdown beliefs (--additional-beliefs)",
+		file:    "embedded/topics/custom-beliefs.md",
+	},
 }
 
 var defaultFoundationalDefinitions = []struct {
@@ -277,14 +283,27 @@ func extractFrontmatter(raw string, base TopicMetadata) (TopicMetadata, string) 
 	for _, line := range strings.Split(fmBody, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "id:") {
-			base.ID = strings.TrimSpace(strings.TrimPrefix(line, "id:"))
+			base.ID = cleanYAMLValue(strings.TrimPrefix(line, "id:"))
 		} else if strings.HasPrefix(line, "title:") {
-			base.Title = strings.TrimSpace(strings.TrimPrefix(line, "title:"))
+			base.Title = cleanYAMLValue(strings.TrimPrefix(line, "title:"))
 		} else if strings.HasPrefix(line, "trigger:") {
-			base.Trigger = strings.TrimSpace(strings.TrimPrefix(line, "trigger:"))
+			base.Trigger = cleanYAMLValue(strings.TrimPrefix(line, "trigger:"))
+		} else if strings.HasPrefix(line, "when:") {
+			base.Trigger = cleanYAMLValue(strings.TrimPrefix(line, "when:"))
 		}
 	}
 	return base, rest
+}
+
+func cleanYAMLValue(val string) string {
+	val = strings.TrimSpace(val)
+	if (strings.HasPrefix(val, "\"") && strings.HasSuffix(val, "\"")) ||
+		(strings.HasPrefix(val, "'") && strings.HasSuffix(val, "'")) {
+		if len(val) >= 2 {
+			val = val[1 : len(val)-1]
+		}
+	}
+	return strings.TrimSpace(val)
 }
 
 func extractHeaderTitle(content, fallback string) string {
