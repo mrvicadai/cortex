@@ -3,6 +3,7 @@ package beliefs_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mrvicadai/cortex/internal/beliefs"
@@ -212,6 +213,16 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	snippet := store.GetInlineSnippet()
 	if len(snippet) < 100 {
 		t.Errorf("snippet unexpectedly small: %d", len(snippet))
+	}
+	if !strings.Contains(snippet, "DEFAULT TO COMMIT") {
+		t.Errorf("snippet missing 'DEFAULT TO COMMIT' rule")
+	}
+
+	if !strings.Contains(bootstrap, "MANDATORY COMMIT CHECKPOINT") {
+		t.Errorf("bootstrap missing 'MANDATORY COMMIT CHECKPOINT' in ODAV")
+	}
+	if !strings.Contains(bootstrap, "MANDATORY SLICE COMMIT") {
+		t.Errorf("bootstrap missing 'MANDATORY SLICE COMMIT' in least-to-most")
 	}
 
 	rendered := store.GetRenderedTableBlock()
