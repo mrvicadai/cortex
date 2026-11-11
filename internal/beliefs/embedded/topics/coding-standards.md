@@ -48,6 +48,7 @@ Remove only unused code introduced by this change.
 ## Commit format
 
 Commit each verified logical change immediately unless explicitly instructed not to commit; do not accumulate multiple changes across tasks. Keep each commit focused on one logical change and exclude unrelated work.
+After each commit, record the completed milestone via `cortex_event_append` with the commit hash and verified outcome.
 Use a single-line conventional commit with an allowed type and an action that says what changed and why.
 
 ## Callback locks

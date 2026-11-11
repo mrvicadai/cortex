@@ -300,7 +300,7 @@ func (s *Store) buildDomainRouterContent(domain string, children []string) strin
 	var sb strings.Builder
 	title := formatDomainTitle(domain)
 	sb.WriteString(fmt.Sprintf("# %s\n\n", title))
-	sb.WriteString(fmt.Sprintf("Scope: Domain router for `%s`. Call `beliefs_get(topics: [\"<sub-topic-id>\"])` to retrieve specific sub-rules.\n\n", domain))
+	sb.WriteString(fmt.Sprintf("Scope: Domain router for `%s`. Call `cortex_get_belief(topics: [\"<sub-topic-id>\"])` to retrieve specific sub-rules.\n\n", domain))
 	sb.WriteString("## Sub-Topics Router\n\n")
 	sb.WriteString("| Sub-Topic ID | Title | When to Call |\n")
 	sb.WriteString("| :--- | :--- | :--- |\n")
@@ -549,7 +549,7 @@ func (s *Store) GetBootstrapPayload() string {
 	}
 
 	sb.WriteString("---\n\n## Task-Triggered Topics Router\n\n")
-	sb.WriteString("Before planning or executing any of the following tasks, call `beliefs_get(topics: [\"<id>\"])` to retrieve authoritative instructions:\n\n")
+	sb.WriteString("Before planning or executing any of the following tasks, call `cortex_get_belief(topics: [\"<id>\"])` to retrieve authoritative instructions:\n\n")
 	sb.WriteString("| Topic ID | Topic Name | When to Call |\n")
 	sb.WriteString("| :--- | :--- | :--- |\n")
 
@@ -559,8 +559,8 @@ func (s *Store) GetBootstrapPayload() string {
 	}
 
 	sb.WriteString("\n### Usage Instruction\n")
-	sb.WriteString("- When entering a task phase, call `beliefs_get(topics: [\"<id>\"])` (or `cortex_get_belief`). Batch multiple topics when crossing boundaries.\n")
-	sb.WriteString("- Use `beliefs_search(query: \"<text>\")` with `inline_content: true` to instantly find and retrieve relevant rules.\n")
+	sb.WriteString("- When entering a task phase, call `cortex_get_belief(topics: [\"<id>\"])`. Batch multiple topics when crossing boundaries.\n")
+	sb.WriteString("- Use `cortex_beliefs_search(query: \"<text>\")` with `inline_content: true` to instantly find and retrieve relevant rules.\n")
 
 	return sb.String()
 }
@@ -569,11 +569,13 @@ func (s *Store) GetInlineSnippet() string {
 	return `<!-- CORTEX_BELIEFS_START -->
 ## Agent Operating Beliefs & Context
 
-**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'beliefs_bootstrap' (or 'cortex_bootstrap') to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap' to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
 
-Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'beliefs_get(topics: ["<topic-id>"])' (or 'cortex_get_belief').
+Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
 
 **DEFAULT TO COMMIT**: Every verified code change or completed slice MUST be committed immediately as a git checkpoint before proceeding or claiming completion, unless explicitly instructed otherwise.
+
+**RECORD PROGRESS MILESTONES**: After completing ANY major action — including investigations that discover a root cause, diagnostic findings, verified test runs, or code commits — you MUST immediately append a milestone event using 'cortex_event_append' with supporting evidence. Do not wait for user prompting or session end; investigations without code changes still require event recording.
 <!-- CORTEX_BELIEFS_END -->
 `
 }

@@ -276,12 +276,30 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	if !strings.Contains(snippet, "DEFAULT TO COMMIT") {
 		t.Errorf("snippet missing 'DEFAULT TO COMMIT' rule")
 	}
+	if !strings.Contains(snippet, "RECORD PROGRESS MILESTONES") {
+		t.Errorf("snippet missing 'RECORD PROGRESS MILESTONES' rule")
+	}
+	if !strings.Contains(snippet, "cortex_event_append") {
+		t.Errorf("snippet missing 'cortex_event_append'")
+	}
+	if !strings.Contains(snippet, "cortex_bootstrap") {
+		t.Errorf("snippet missing 'cortex_bootstrap'")
+	}
+	if strings.Contains(snippet, "beliefs_bootstrap") || strings.Contains(snippet, "fieldnotes_") {
+		t.Errorf("snippet unexpectedly contains legacy aliases")
+	}
 
 	if !strings.Contains(bootstrap, "MANDATORY COMMIT CHECKPOINT") {
 		t.Errorf("bootstrap missing 'MANDATORY COMMIT CHECKPOINT' in ODAV")
 	}
 	if !strings.Contains(bootstrap, "MANDATORY SLICE COMMIT") {
 		t.Errorf("bootstrap missing 'MANDATORY SLICE COMMIT' in least-to-most")
+	}
+	if !strings.Contains(bootstrap, "MANDATORY MILESTONE LOGGING") {
+		t.Errorf("bootstrap missing 'MANDATORY MILESTONE LOGGING' in project-state")
+	}
+	if strings.Contains(bootstrap, "fieldnotes_") {
+		t.Errorf("bootstrap unexpectedly contains legacy 'fieldnotes_' references")
 	}
 
 	rendered := store.GetRenderedTableBlock()

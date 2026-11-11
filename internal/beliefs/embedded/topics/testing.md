@@ -57,3 +57,4 @@ Verify behavior-preserving claims against real consumers and current-world cases
 
 Passing tests prove correctness; committing preserves proof.
 MUST NOT claim a task or bug fix is tested, verified, or complete while modified files remain uncommitted in `git status`, unless the user explicitly instructed not to commit.
+After committing, record the test verification proof and commit reference via `cortex_event_append`.

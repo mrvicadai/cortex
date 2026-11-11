@@ -19,12 +19,14 @@ Use [least-to-most](least-to-most.md) to order dependent subproblems.
 Perform the chosen action within the authorized scope.
 Keep the change small enough to verify independently.
 
-## Verify, commit checkpoint, and repeat
+## Verify, checkpoint, and repeat
 
 Check the actual result against the success criteria under [testing guidance](testing.md) when applicable.
 Treat an attempted action, successful tool call, or unchanged assumption as insufficient proof of the requested outcome.
 
 **MANDATORY COMMIT CHECKPOINT**: You MUST commit verified changes (`git add` + `git commit`) as a focused checkpoint before deciding the next action or concluding the turn, unless explicitly instructed not to commit. A verified change that remains uncommitted is an incomplete action.
+
+**RECORD PROGRESS**: After completing each action (an investigation root cause or a verified code commit checkpoint), immediately record the milestone outcome via `cortex_event_append` under [project-state](project-state.md).
 
 Use the verified result to choose the next action; revise the plan when evidence changes rather than repeating it unchanged.
 Persist applicable verified facts and completed work under [project-memory policy](project-state.md).
