@@ -29,21 +29,21 @@ USAGE:
   cortex --help, -h              Show this help message
 
 TOOLS PROVIDED:
-  Episodic Memory (Fieldnotes Engine):
-    cortex_context (fieldnotes_context)       Load essential @context & recent events
-    cortex_fact_put (fieldnotes_fact_put)     Create or CAS-replace a persistent fact
-    cortex_fact_retire (fieldnotes_fact_retire) CAS-retire a fact with tombstone
-    cortex_event_append (fieldnotes_event_append) Append immutable milestone outcome
-    cortex_find (fieldnotes_find)             Browse/search facts & events
-    cortex_read (fieldnotes_read)             Fetch complete unchunked records
+  Episodic Memory:
+    cortex_context                            Load essential @context & recent events
+    cortex_fact_put                           Create or CAS-replace a persistent fact
+    cortex_fact_retire                        CAS-retire a fact with tombstone
+    cortex_event_append                       Append immutable milestone outcome with evidence
+    cortex_find                               Browse/search facts & events
+    cortex_read                               Fetch complete unchunked records
 
   Normative Beliefs Engine:
-    cortex_list_beliefs (beliefs_bootstrap)   Session bootstrap & topic router table
-    cortex_get_belief (beliefs_get)           Retrieve rules for topics (batch or single)
-    cortex_beliefs_search (beliefs_search)    Search rules with optional inline markdown
+    cortex_bootstrap                          Session bootstrap & topic router table
+    cortex_get_belief                         Retrieve rules for topics (batch or single)
+    cortex_beliefs_search                     Search rules with optional inline markdown
 
   Cross-Cutting:
-    cortex_search                             Full-text search spanning beliefs & fieldnotes
+    cortex_search                             Full-text search spanning beliefs & memory
 
 HARNESS CONFIGURATION (npx zero-install):
   Claude Desktop, Cursor, or AGY:

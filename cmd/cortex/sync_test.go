@@ -54,8 +54,14 @@ User defined post-amble rule that must be preserved.
 	if strings.Contains(updated, "OLD STALE CONTENT") {
 		t.Error("old stale content was not replaced")
 	}
-	if !strings.Contains(updated, "MANDATORY PROTOCOL") || !strings.Contains(updated, "beliefs_bootstrap") {
+	if !strings.Contains(updated, "MANDATORY PROTOCOL") || !strings.Contains(updated, "cortex_bootstrap") {
 		t.Error("updated file does not contain mandatory bootstrap protocol directive")
+	}
+	if !strings.Contains(updated, "RECORD PROGRESS MILESTONES") {
+		t.Error("updated file does not contain RECORD PROGRESS MILESTONES directive")
+	}
+	if strings.Contains(updated, "beliefs_bootstrap") {
+		t.Error("updated file unexpectedly contains legacy beliefs_bootstrap")
 	}
 	if strings.Contains(updated, "| Topic ID | Topic Name | When to Call |") {
 		t.Error("updated file should not contain static topic table")

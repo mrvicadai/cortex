@@ -70,9 +70,13 @@ This outputs an immutable, zero-drift directive:
 <!-- CORTEX_BELIEFS_START -->
 ## Agent Operating Beliefs & Context
 
-**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'beliefs_bootstrap' (or 'cortex_bootstrap') to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap' to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
 
-Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'beliefs_get(topics: ["<topic-id>"])' (or 'cortex_get_belief').
+Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
+
+**DEFAULT TO COMMIT**: Every verified code change or completed slice MUST be committed immediately as a git checkpoint before proceeding or claiming completion, unless explicitly instructed otherwise.
+
+**RECORD PROGRESS MILESTONES**: After completing ANY major action — including investigations that discover a root cause, diagnostic findings, verified test runs, or code commits — you MUST immediately append a milestone event using 'cortex_event_append' with supporting evidence. Do not wait for user prompting or session end; investigations without code changes still require event recording.
 <!-- CORTEX_BELIEFS_END -->
 ```
 
@@ -91,30 +95,30 @@ npx -y @mrvicadai/cortex sync AGENTS.md
 
 ## Tools Interface
 
-Cortex enforces strict zero-duplication: each capability exposes exactly one canonical `cortex_*` tool and one historical alias (`fieldnotes_*` or `beliefs_*`) for 100% backward compatibility:
+Cortex exposes 10 clean, unambiguous tools under the canonical `cortex_*` namespace:
 
-### 1. Episodic Context Tools (Fieldnotes Engine)
+### 1. Episodic Context Tools
 
-| Primary Tool | Historical Alias | Purpose | Mutating / CAS |
-| :--- | :--- | :--- | :--- |
-| `cortex_context` | `fieldnotes_context` | Load `@context` guidance & recent events within 8 KiB budget | Read-only |
-| `cortex_fact_put` | `fieldnotes_fact_put` | Create or CAS-replace a persistent project fact | Yes (CAS + `operation_id`) |
-| `cortex_fact_retire`| `fieldnotes_fact_retire`| CAS-retire a fact, preserving an opaque tombstone | Yes (CAS + `operation_id`) |
-| `cortex_event_append`| `fieldnotes_event_append`| Append immutable outcome to project ledger with evidence | Yes (`operation_id`) |
-| `cortex_find` | `fieldnotes_find` | Search/browse references across facts & events | Read-only |
-| `cortex_read` | `fieldnotes_read` | Fetch 1–10 unchunked complete records with tombstone status | Read-only |
-
-### 2. Normative Belief Tools (Belief System Engine)
-
-| Primary Tool | Historical Alias | Purpose |
+| Tool | Purpose | Mutating / CAS |
 | :--- | :--- | :--- |
-| `cortex_bootstrap` | `beliefs_bootstrap` | Session bootstrap (principles + router) or query filter with SemVer & `origin` metadata |
-| `cortex_get_belief` | `beliefs_get` | Batch retrieval of rule guidance (defaults to `topics: []` array) |
-| `cortex_beliefs_search` | `beliefs_search` | Rule keyword search with optional inline markdown (`inline_content: true`) |
+| `cortex_context` | Load `@context` guidance & recent events within 8 KiB budget | Read-only |
+| `cortex_fact_put` | Create or CAS-replace a persistent project fact | Yes (CAS + `operation_id`) |
+| `cortex_fact_retire`| CAS-retire a fact, preserving an opaque tombstone | Yes (CAS + `operation_id`) |
+| `cortex_event_append`| Append immutable outcome to project ledger with evidence | Yes (`operation_id`) |
+| `cortex_find` | Search/browse references across facts & events | Read-only |
+| `cortex_read` | Fetch 1–10 unchunked complete records with tombstone status | Read-only |
+
+### 2. Normative Belief Tools
+
+| Tool | Purpose |
+| :--- | :--- |
+| `cortex_bootstrap` | Session bootstrap (principles + router) or query filter with SemVer & `origin` metadata |
+| `cortex_get_belief` | Batch retrieval of rule guidance (defaults to `topics: []` array) |
+| `cortex_beliefs_search` | Rule keyword search with optional inline markdown (`inline_content: true`) |
 
 ### 3. Cross-Cutting Search & Resources
 
-* **`cortex_search`**: Multi-scope full-text search (`scope: "all" | "beliefs" | "fieldnotes"`).
+* **`cortex_search`**: Multi-scope full-text search (`scope: "all" | "beliefs" | "memory"`).
 * **Resource `cortex://beliefs/{topic}`**: Direct URI read access to full markdown rule documents.
 * **Resource `cortex://context`**: Direct URI snapshot of active project facts & recent events.
 * **Prompt `cortex_bootstrap`**: Pre-seeds agent context with active project facts + belief router.
