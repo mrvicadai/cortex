@@ -124,6 +124,16 @@ func TestServerToolList(t *testing.T) {
 				t.Errorf("expected topic IDs in description, got: %s", tool.Description)
 			}
 		}
+		if tool.Name == "cortex_fact_put" {
+			if !containsString(tool.Description, "Do NOT use for completed tasks") || !containsString(tool.Description, "cortex_event_append") {
+				t.Errorf("expected fact vs event guidance in cortex_fact_put description, got: %s", tool.Description)
+			}
+		}
+		if tool.Name == "cortex_event_append" {
+			if !containsString(tool.Description, "milestone") {
+				t.Errorf("expected milestone guidance in cortex_event_append description, got: %s", tool.Description)
+			}
+		}
 	}
 }
 

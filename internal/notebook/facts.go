@@ -8,7 +8,7 @@ import (
 type PutInput struct {
 	OperationID      string `json:"operation_id" jsonschema:"Stable retry key, reused only with the identical request."`
 	ExpectedRevision string `json:"expected_revision" jsonschema:"Empty string creates a never-seen ID; otherwise use the current opaque revision from a complete read."`
-	Fact             Fact   `json:"fact"`
+	Fact             Fact   `json:"fact" jsonschema:"Durable active project invariant or system truth (not for completed milestones/tasks)."`
 }
 
 type RetireInput struct {

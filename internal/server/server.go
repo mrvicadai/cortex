@@ -49,7 +49,7 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	registerToolPair(s, "cortex_context", "fieldnotes_context", contextDesc, false, nb.Context)
 
 	// 2. Fact Put (cortex_fact_put + fieldnotes_fact_put)
-	factPutDesc := "Create or CAS-replace a complete fact. Use ID @context for essential guidance. Retry the identical request with the same operation_id."
+	factPutDesc := "Create or CAS-replace a durable project invariant (e.g. build configs, architecture, @context). Do NOT use for completed tasks or historical actions (e.g. 'PR merged') — use cortex_event_append instead."
 	registerToolPair(s, "cortex_fact_put", "fieldnotes_fact_put", factPutDesc, true, nb.PutFact)
 
 	// 3. Fact Retire (cortex_fact_retire + fieldnotes_fact_retire)
@@ -57,7 +57,7 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	registerToolPair(s, "cortex_fact_retire", "fieldnotes_fact_retire", factRetireDesc, true, nb.RetireFact)
 
 	// 4. Event Append (cortex_event_append + fieldnotes_event_append)
-	eventAppendDesc := "Append an immutable completed outcome with evidence pointers. Retry the identical request with the same operation_id."
+	eventAppendDesc := "Append an immutable completed progress milestone or chronological outcome with evidence (e.g. 'PR #42 merged', 'Refactored auth handler', 'Tests passed')."
 	registerToolPair(s, "cortex_event_append", "fieldnotes_event_append", eventAppendDesc, false, nb.AppendEvent)
 
 	// 5. Find (cortex_find + fieldnotes_find)

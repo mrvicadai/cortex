@@ -18,8 +18,8 @@ type Event struct {
 type AppendInput struct {
 	OperationID string     `json:"operation_id" jsonschema:"Stable retry key; reuse with the identical request after response loss."`
 	OccurredAt  string     `json:"occurred_at,omitempty" jsonschema:"Optional caller-declared RFC3339 event time, separate from server insertion time."`
-	Body        string     `json:"body"`
-	Evidence    []Evidence `json:"evidence"`
+	Body        string     `json:"body" jsonschema:"Chronological outcome or milestone description (e.g. 'Merged PR #42', 'Investigated memory leak', 'Passed test suite')."`
+	Evidence    []Evidence `json:"evidence" jsonschema:"Structured evidence pointers (e.g. git commit hash, test logs, PR link)."`
 }
 
 func (s *Store) AppendEvent(ctx context.Context, in AppendInput) (Receipt, error) {
