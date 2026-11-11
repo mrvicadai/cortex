@@ -6,7 +6,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-const Budget = 65536
+const Budget = 98304
 
 func Result(value any, isError bool) *mcp.CallToolResult {
 	data, err := json.Marshal(value)

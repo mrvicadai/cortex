@@ -12,7 +12,7 @@ import (
 func TestWholeRecordReadPagination(t *testing.T) {
 	s := openTest(t)
 	ctx := context.Background()
-	body := strings.Repeat("\n\"🔐", 500)
+	body := strings.Repeat("\n\"🔐", 680)
 	refs := []Reference{}
 	for i := 0; i < 8; i++ {
 		id := fmt.Sprintf("fact-%d", i)
