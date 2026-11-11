@@ -67,21 +67,21 @@ npx -y @mrvicadai/cortex snippet
 This outputs an immutable, zero-drift directive:
 
 ```markdown
-<!-- CORTEX_START -->
-## Agent Operating Context (Cortex)
-This repository uses Cortex for behavioral guidance and episodic memory:
-- **Foundations**: Apply ODAV (Observe, Decide, Act, Verify), Least-to-Most subproblem ordering, and active Project Memory.
-- **Guidance on Demand**: The active topic router is declared directly in your 'cortex_get_belief' (or 'beliefs_get') tool definition. Consult relevant topic(s) before writing code, testing, git stacking, designing, or opening MRs. Call 'cortex_list_beliefs' to inspect all topics.
-- **Episodic Memory**: At session start, call 'cortex_context' to confirm project identity. Persist facts with 'cortex_fact_put' and milestones with 'cortex_event_append'.
-<!-- CORTEX_END -->
+<!-- CORTEX_BELIEFS_START -->
+## Agent Operating Beliefs & Context
+
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'beliefs_bootstrap' (or 'cortex_bootstrap') to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+
+Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'beliefs_get(topics: ["<topic-id>"])' (or 'cortex_get_belief').
+<!-- CORTEX_BELIEFS_END -->
 ```
 
 ### Why this is scalable:
-1. **Dynamic Tool Schema Reflection**: In the MCP protocol, `cortex_get_belief` and `cortex_list_beliefs` dynamically declare the active topics and triggers directly inside their tool definitions on server handshake. The model receives active topic triggers on **Turn 0** with zero tokens wasted in `AGENTS.md`.
+1. **Dynamic Tool Schema Reflection**: In the MCP protocol, `cortex_get_belief` dynamically declares the active topics and triggers directly inside its tool definition on server handshake. The model receives active topic triggers on **Turn 0** with zero tokens wasted in `AGENTS.md`.
 2. **Never Goes Stale**: Adding topics or configuring local overrides (`--additional-beliefs`) requires zero updates to `AGENTS.md`.
 
-### Optional: In-Place Table Sync (`cortex sync`)
-For teams that prefer a rendered markdown table in their repository documentation, use `cortex sync` to update the table between `<!-- CORTEX_BELIEFS_START -->` and `<!-- CORTEX_BELIEFS_END -->` markers in-place:
+### In-Place Table Sync (`cortex sync`)
+To sync any target `AGENTS.md` in-place, Cortex updates the block between `<!-- CORTEX_BELIEFS_START -->` and `<!-- CORTEX_BELIEFS_END -->` (or legacy markers) with the clean mandatory protocol:
 
 ```bash
 npx -y @mrvicadai/cortex sync AGENTS.md
@@ -91,7 +91,7 @@ npx -y @mrvicadai/cortex sync AGENTS.md
 
 ## Tools Interface
 
-Cortex exposes primary `cortex_*` tools alongside dual-registered historical aliases (`fieldnotes_*`, `beliefs_*`) for 100% backward compatibility:
+Cortex enforces strict zero-duplication: each capability exposes exactly one canonical `cortex_*` tool and one historical alias (`fieldnotes_*` or `beliefs_*`) for 100% backward compatibility:
 
 ### 1. Episodic Context Tools (Fieldnotes Engine)
 
@@ -108,8 +108,8 @@ Cortex exposes primary `cortex_*` tools alongside dual-registered historical ali
 
 | Primary Tool | Historical Alias | Purpose |
 | :--- | :--- | :--- |
-| `cortex_list_beliefs` | `beliefs_bootstrap`, `cortex_beliefs_bootstrap` | Session bootstrap (principles + router) or query filter with SemVer & `origin` metadata |
-| `cortex_get_belief` | `beliefs_get`, `cortex_beliefs_get` | Batch retrieval of rule guidance (defaults to `topics: []` array) |
+| `cortex_bootstrap` | `beliefs_bootstrap` | Session bootstrap (principles + router) or query filter with SemVer & `origin` metadata |
+| `cortex_get_belief` | `beliefs_get` | Batch retrieval of rule guidance (defaults to `topics: []` array) |
 | `cortex_beliefs_search` | `beliefs_search` | Rule keyword search with optional inline markdown (`inline_content: true`) |
 
 ### 3. Cross-Cutting Search & Resources

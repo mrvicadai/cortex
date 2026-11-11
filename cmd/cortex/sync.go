@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	startMarkers = []string{"<!-- CORTEX_BELIEFS_START -->", "<!-- AGENT_BELIEFS_START -->"}
-	endMarkers   = []string{"<!-- CORTEX_BELIEFS_END -->", "<!-- AGENT_BELIEFS_END -->"}
+	startMarkers = []string{"<!-- CORTEX_BELIEFS_START -->", "<!-- AGENT_BELIEFS_START -->", "<!-- CORTEX_START -->"}
+	endMarkers   = []string{"<!-- CORTEX_BELIEFS_END -->", "<!-- AGENT_BELIEFS_END -->", "<!-- CORTEX_END -->"}
 )
 
 func syncFile(targetPath string, bStore *beliefs.Store) error {
@@ -30,11 +30,6 @@ func syncFile(targetPath string, bStore *beliefs.Store) error {
 	}
 
 	content := string(contentBytes)
-
-	// Check if already using zero-drift pointer
-	if strings.Contains(content, "<!-- CORTEX_START -->") && strings.Contains(content, "<!-- CORTEX_END -->") {
-		return fmt.Errorf("%s is configured with the zero-drift dynamic pointer (<!-- CORTEX_START -->), which auto-discovers topics via tool descriptions. No sync needed", targetPath)
-	}
 
 	// Locate start and end markers
 	startIdx := -1

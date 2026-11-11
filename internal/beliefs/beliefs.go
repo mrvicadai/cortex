@@ -424,41 +424,18 @@ func (s *Store) GetBootstrapPayload() string {
 }
 
 func (s *Store) GetInlineSnippet() string {
-	return `<!-- CORTEX_START -->
-## Agent Operating Context (Cortex)
-This repository uses Cortex for behavioral guidance and episodic memory:
-- **Foundations**: Apply ODAV (Observe, Decide, Act, Verify), Least-to-Most subproblem ordering, and active Project Memory.
-- **Guidance on Demand**: The active topic router is declared directly in your 'cortex_get_belief' (or 'beliefs_get') tool definition. Consult relevant topic(s) before writing code, testing, git stacking, designing, or opening MRs. Call 'cortex_list_beliefs' to inspect all topics.
-- **Episodic Memory**: At session start, call 'cortex_context' to confirm project identity. Persist facts with 'cortex_fact_put' and milestones with 'cortex_event_append'.
-<!-- CORTEX_END -->
+	return `<!-- CORTEX_BELIEFS_START -->
+## Agent Operating Beliefs & Context
+
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'beliefs_bootstrap' (or 'cortex_bootstrap') to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+
+Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'beliefs_get(topics: ["<topic-id>"])' (or 'cortex_get_belief').
+<!-- CORTEX_BELIEFS_END -->
 `
 }
 
 func (s *Store) GetRenderedTableBlock() string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	var sb strings.Builder
-	sb.WriteString("<!-- CORTEX_BELIEFS_START -->\n")
-	sb.WriteString("## Agent Operating Beliefs\n\n")
-	sb.WriteString("You operate under core operating principles and progressive topic guidance:\n")
-	sb.WriteString("- **ODAV**: Observe, Decide, Act, Verify. Inspect state and verified facts before acting; test each change.\n")
-	sb.WriteString("- **Least-to-Most**: Decompose complex tasks into small, dependency-ordered, verified subproblems.\n")
-	sb.WriteString("- **Project Memory**: Proactively record verified milestones, facts, and validation results.\n\n")
-	sb.WriteString("### Task-Triggered Topics Router\n")
-	sb.WriteString("Before planning or executing any of the following tasks, call `beliefs_get(topics: [\"<id>\"])`:\n\n")
-	sb.WriteString("| Topic ID | Topic Name | When to Call |\n")
-	sb.WriteString("| :--- | :--- | :--- |\n")
-
-	for _, id := range s.topicOrder {
-		t := s.topics[id]
-		sb.WriteString(fmt.Sprintf("| `%s` | %s | %s |\n", t.ID, t.Title, t.Trigger))
-	}
-
-	sb.WriteString("\n*Usage*: Call `beliefs_get(topics: [\"<id>\"])` when entering a task phase. Use `beliefs_search(query: \"<text>\")` to search rules, or `beliefs_bootstrap` for full operating principles.\n")
-	sb.WriteString("<!-- CORTEX_BELIEFS_END -->\n")
-
-	return sb.String()
+	return s.GetInlineSnippet()
 }
 
 func tokenize(query string) []string {

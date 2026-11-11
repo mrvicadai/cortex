@@ -89,16 +89,28 @@ func TestServerToolList(t *testing.T) {
 		}
 	}
 
-	// Primary Belief Tools
+	// Primary Belief Tools (Zero Duplication: 1 canonical + 1 historical alias)
 	expectedBeliefs := []string{
-		"cortex_list_beliefs", "beliefs_bootstrap", "cortex_beliefs_bootstrap",
-		"cortex_get_belief", "beliefs_get", "cortex_beliefs_get",
+		"cortex_bootstrap", "beliefs_bootstrap",
+		"cortex_get_belief", "beliefs_get",
 		"cortex_beliefs_search", "beliefs_search",
 		"cortex_search",
 	}
 	for _, name := range expectedBeliefs {
 		if !names[name] {
 			t.Errorf("expected belief tool/alias %s was not registered", name)
+		}
+	}
+
+	// Verify retired duplicate tools do NOT exist
+	unwantedDuplicates := []string{
+		"cortex_list_beliefs",
+		"cortex_beliefs_bootstrap",
+		"cortex_beliefs_get",
+	}
+	for _, name := range unwantedDuplicates {
+		if names[name] {
+			t.Errorf("unexpected duplicate tool %s should be retired", name)
 		}
 	}
 

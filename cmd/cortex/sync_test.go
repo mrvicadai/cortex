@@ -50,12 +50,15 @@ User defined post-amble rule that must be preserved.
 		t.Error("post-amble was unexpectedly modified or removed")
 	}
 
-	// Verify stale content replaced with fresh topics table
+	// Verify stale content replaced with fresh mandatory protocol block
 	if strings.Contains(updated, "OLD STALE CONTENT") {
 		t.Error("old stale content was not replaced")
 	}
-	if !strings.Contains(updated, "coding-standards") || !strings.Contains(updated, "mr-rules") {
-		t.Error("updated file does not contain fresh topic table")
+	if !strings.Contains(updated, "MANDATORY PROTOCOL") || !strings.Contains(updated, "beliefs_bootstrap") {
+		t.Error("updated file does not contain mandatory bootstrap protocol directive")
+	}
+	if strings.Contains(updated, "| Topic ID | Topic Name | When to Call |") {
+		t.Error("updated file should not contain static topic table")
 	}
 }
 
@@ -75,20 +78,29 @@ func TestSyncFileWithoutMarkersFails(t *testing.T) {
 	}
 }
 
-func TestSyncFileWithZeroDriftPointerInformsUser(t *testing.T) {
+func TestSyncMigratesLegacyPointer(t *testing.T) {
 	tempDir := t.TempDir()
 	targetFile := filepath.Join(tempDir, "AGENTS.md")
 
 	content := `<!-- CORTEX_START -->
-Zero-drift pointer active
+Legacy pointer block
 <!-- CORTEX_END -->`
 	if err := os.WriteFile(targetFile, []byte(content), 0644); err != nil {
 		t.Fatalf("writing test file: %v", err)
 	}
 
 	bStore, _ := beliefs.NewStore("")
-	err := syncFile(targetFile, bStore)
-	if err == nil || !strings.Contains(err.Error(), "zero-drift dynamic pointer") {
-		t.Errorf("expected zero-drift pointer notification error, got: %v", err)
+	if err := syncFile(targetFile, bStore); err != nil {
+		t.Fatalf("syncFile failed on legacy pointer: %v", err)
+	}
+
+	updatedBytes, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatalf("reading updated file: %v", err)
+	}
+	updated := string(updatedBytes)
+
+	if !strings.Contains(updated, "MANDATORY PROTOCOL") || !strings.Contains(updated, "<!-- CORTEX_BELIEFS_START -->") {
+		t.Errorf("expected legacy pointer to be migrated to mandatory protocol block, got: %s", updated)
 	}
 }

@@ -103,7 +103,7 @@ func addTool[In, Out any](s *mcp.Server, name, description string, destructive b
 // Normative Belief Tools
 // ----------------------------------------------------------------------------
 
-type ListBeliefsInput struct {
+type BootstrapInput struct {
 	Query string `json:"query,omitempty" jsonschema:"Optional keyword filter to filter available belief topics (e.g., 'git', 'testing')."`
 }
 
@@ -133,9 +133,9 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 		return
 	}
 
-	// 7. List Beliefs / Bootstrap
-	listDesc := "Discover available normative operating principles and task-triggered topics. Empty query returns the complete bootstrap payload (ODAV + router table)."
-	listHandler := func(ctx context.Context, in ListBeliefsInput) (any, error) {
+	// 7. Bootstrap (cortex_bootstrap + beliefs_bootstrap)
+	bootstrapDesc := "Session bootstrap: returns core operating principles (ODAV, Least-to-Most, Project-State) and the active task-triggered topics router."
+	bootstrapHandler := func(ctx context.Context, in BootstrapInput) (any, error) {
 		if strings.TrimSpace(in.Query) == "" {
 			return struct {
 				Bootstrap string                  `json:"bootstrap"`
@@ -151,8 +151,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 			Topics: b.ListTopics(in.Query),
 		}, nil
 	}
-	registerToolPair(s, "cortex_list_beliefs", "beliefs_bootstrap", listDesc, false, listHandler)
-	addTool(s, "cortex_beliefs_bootstrap", listDesc+" (alias for cortex_list_beliefs)", false, listHandler)
+	registerToolPair(s, "cortex_bootstrap", "beliefs_bootstrap", bootstrapDesc, false, bootstrapHandler)
 
 	// 8. Get Beliefs (defaults to array of topics)
 	getDesc := formatGetBeliefDescription(b)
@@ -198,7 +197,6 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 		}, nil
 	}
 	registerToolPair(s, "cortex_get_belief", "beliefs_get", getDesc, false, getHandler)
-	addTool(s, "cortex_beliefs_get", getDesc+" (alias for cortex_get_belief)", false, getHandler)
 
 	// 9. Beliefs Search
 	searchDesc := "Search normative belief rules using natural language questions or keywords, optionally inlining full markdown guidance."

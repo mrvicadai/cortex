@@ -47,8 +47,8 @@ func TestCLISnippetAndInstructions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error on snippet: %v", err)
 	}
-	if !strings.Contains(stdout.String(), "CORTEX_START") {
-		t.Errorf("expected snippet block, got %s", stdout.String())
+	if !strings.Contains(stdout.String(), "CORTEX_BELIEFS_START") || !strings.Contains(stdout.String(), "MANDATORY PROTOCOL") {
+		t.Errorf("expected mandatory protocol snippet block, got %s", stdout.String())
 	}
 
 	// instructions
