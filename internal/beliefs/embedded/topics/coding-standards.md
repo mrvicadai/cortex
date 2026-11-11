@@ -47,7 +47,7 @@ Remove only unused code introduced by this change.
 
 ## Commit format
 
-When authorized to commit, keep each commit focused on one logical change and exclude unrelated work.
+Commit each verified logical change unless explicitly instructed not to commit; keep each commit focused on one logical change and exclude unrelated work.
 Use a single-line conventional commit with an allowed type and an action that says what changed and why.
 
 ## Callback locks

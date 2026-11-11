@@ -14,6 +14,7 @@ Keep trivial tasks direct rather than inventing unnecessary subproblems.
 
 Solve the simplest ready subproblem using the [ODAV loop](odav.md).
 Verify its result before using it as a premise or building a dependent slice on it.
+Commit each independently verified slice as a focused checkpoint before building the next dependent subproblem on it, unless explicitly instructed not to commit; do not accumulate multiple completed slices into a single end-of-task commit.
 Carry verified findings and reusable intermediate results into the next, more complex subproblem instead of re-deriving them.
 Revise the remaining decomposition when new evidence invalidates a dependency or assumption.
 Stop and resolve a failed prerequisite rather than building on an unverified result.
