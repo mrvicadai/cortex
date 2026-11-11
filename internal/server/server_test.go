@@ -76,41 +76,46 @@ func TestServerToolList(t *testing.T) {
 
 	// Primary Episodic Tools
 	expectedEpisodic := []string{
-		"cortex_context", "fieldnotes_context",
-		"cortex_fact_put", "fieldnotes_fact_put",
-		"cortex_fact_retire", "fieldnotes_fact_retire",
-		"cortex_event_append", "fieldnotes_event_append",
-		"cortex_find", "fieldnotes_find",
-		"cortex_read", "fieldnotes_read",
+		"cortex_context",
+		"cortex_fact_put",
+		"cortex_fact_retire",
+		"cortex_event_append",
+		"cortex_find",
+		"cortex_read",
 	}
 	for _, name := range expectedEpisodic {
 		if !names[name] {
-			t.Errorf("expected episodic tool/alias %s was not registered", name)
+			t.Errorf("expected episodic tool %s was not registered", name)
 		}
 	}
 
-	// Primary Belief Tools (Zero Duplication: 1 canonical + 1 historical alias)
+	// Primary Belief Tools (Zero Duplication: canonical only)
 	expectedBeliefs := []string{
-		"cortex_bootstrap", "beliefs_bootstrap",
-		"cortex_get_belief", "beliefs_get",
-		"cortex_beliefs_search", "beliefs_search",
+		"cortex_bootstrap",
+		"cortex_get_belief",
+		"cortex_beliefs_search",
 		"cortex_search",
 	}
 	for _, name := range expectedBeliefs {
 		if !names[name] {
-			t.Errorf("expected belief tool/alias %s was not registered", name)
+			t.Errorf("expected belief tool %s was not registered", name)
 		}
 	}
 
-	// Verify retired duplicate tools do NOT exist
-	unwantedDuplicates := []string{
-		"cortex_list_beliefs",
-		"cortex_beliefs_bootstrap",
-		"cortex_beliefs_get",
+	if len(toolsRes.Tools) != 10 {
+		t.Errorf("expected exactly 10 canonical tools, got %d", len(toolsRes.Tools))
 	}
-	for _, name := range unwantedDuplicates {
+
+	// Verify retired legacy aliases do NOT exist
+	unwantedAliases := []string{
+		"fieldnotes_context", "fieldnotes_fact_put", "fieldnotes_fact_retire",
+		"fieldnotes_event_append", "fieldnotes_find", "fieldnotes_read",
+		"beliefs_bootstrap", "beliefs_get", "beliefs_search",
+		"cortex_list_beliefs", "cortex_beliefs_bootstrap", "cortex_beliefs_get",
+	}
+	for _, name := range unwantedAliases {
 		if names[name] {
-			t.Errorf("unexpected duplicate tool %s should be retired", name)
+			t.Errorf("unexpected legacy alias or duplicate %s should be retired", name)
 		}
 	}
 
@@ -156,9 +161,9 @@ func TestEpisodicToolsExecution(t *testing.T) {
 		t.Fatalf("cortex_context returned error result: %+v", ctxRes)
 	}
 
-	// 2. Put Fact using alias: fieldnotes_fact_put
+	// 2. Put Fact using primary: cortex_fact_put
 	putRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name: "fieldnotes_fact_put",
+		Name: "cortex_fact_put",
 		Arguments: map[string]any{
 			"operation_id":      "op-fact-1",
 			"expected_revision": "",
@@ -172,10 +177,10 @@ func TestEpisodicToolsExecution(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("fieldnotes_fact_put failed: %v", err)
+		t.Fatalf("cortex_fact_put failed: %v", err)
 	}
 	if putRes.IsError {
-		t.Fatalf("fieldnotes_fact_put returned error: %s", extractText(putRes))
+		t.Fatalf("cortex_fact_put returned error: %s", extractText(putRes))
 	}
 
 	// 3. Append Event using primary: cortex_event_append
@@ -201,11 +206,11 @@ func TestEpisodicToolsExecution(t *testing.T) {
 
 	// 4. Verify in cortex_context
 	verifyRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "fieldnotes_context",
+		Name:      "cortex_context",
 		Arguments: map[string]any{},
 	})
 	if err != nil {
-		t.Fatalf("fieldnotes_context failed: %v", err)
+		t.Fatalf("cortex_context failed: %v", err)
 	}
 	var ctxData struct {
 		Recent []any `json:"recent"`
@@ -225,13 +230,13 @@ func TestBeliefToolsExecution(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// 1. beliefs_bootstrap (alias for cortex_list_beliefs)
+	// 1. cortex_bootstrap
 	bootRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "beliefs_bootstrap",
+		Name:      "cortex_bootstrap",
 		Arguments: map[string]any{},
 	})
 	if err != nil {
-		t.Fatalf("call beliefs_bootstrap failed: %v", err)
+		t.Fatalf("call cortex_bootstrap failed: %v", err)
 	}
 	bootText := extractText(bootRes)
 	if bootText == "" || (!containsString(bootText, "ODAV") && !containsString(bootText, "Foundational")) {
@@ -253,24 +258,24 @@ func TestBeliefToolsExecution(t *testing.T) {
 		t.Errorf("expected batch response to include both topics, got: %s", batchText)
 	}
 
-	// 3. beliefs_get with single topic alias
+	// 3. cortex_get_belief with single topic
 	getSingleRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name: "beliefs_get",
+		Name: "cortex_get_belief",
 		Arguments: map[string]any{
 			"topic": "mr-rules",
 		},
 	})
 	if err != nil {
-		t.Fatalf("call beliefs_get single topic failed: %v", err)
+		t.Fatalf("call cortex_get_belief single topic failed: %v", err)
 	}
 	singleText := extractText(getSingleRes)
 	if !containsString(singleText, "mr-rules") {
 		t.Errorf("expected single topic response for mr-rules, got: %s", singleText)
 	}
 
-	// 4. beliefs_search with inline_content
+	// 4. cortex_beliefs_search with inline_content
 	searchRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name: "beliefs_search",
+		Name: "cortex_beliefs_search",
 		Arguments: map[string]any{
 			"query":          "inversion",
 			"inline_content": true,
@@ -278,7 +283,7 @@ func TestBeliefToolsExecution(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("beliefs_search failed: %v", err)
+		t.Fatalf("cortex_beliefs_search failed: %v", err)
 	}
 	searchText := extractText(searchRes)
 	if !containsString(searchText, "testing") {

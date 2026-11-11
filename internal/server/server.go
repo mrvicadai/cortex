@@ -13,7 +13,7 @@ import (
 	"github.com/mrvicadai/cortex/internal/wire"
 )
 
-const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. Check directory from cortex_context to confirm the active project notebook. Use cortex_get_belief (or beliefs_get) to load authoritative guidance before coding, testing, or opening merge requests."
+const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. Check directory from cortex_context to confirm the active project notebook. Use cortex_get_belief to load authoritative guidance before coding, testing, or opening merge requests. After major actions (including investigations, root cause discoveries, or verified commits), immediately record progress milestones with cortex_event_append."
 
 type ServerOptions struct {
 	Notebook *notebook.Store
@@ -44,36 +44,29 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 		return
 	}
 
-	// 1. Context (cortex_context + fieldnotes_context)
+	// 1. Context
 	contextDesc := "Load essential guidance and complete recent events for the active project directory within an 8 KiB budget. Resume older events with cursor only."
-	registerToolPair(s, "cortex_context", "fieldnotes_context", contextDesc, false, nb.Context)
+	addTool(s, "cortex_context", contextDesc, false, nb.Context)
 
-	// 2. Fact Put (cortex_fact_put + fieldnotes_fact_put)
+	// 2. Fact Put
 	factPutDesc := "Create or CAS-replace a durable project invariant (e.g. build configs, architecture, @context). Do NOT use for completed tasks or historical actions (e.g. 'PR merged') — use cortex_event_append instead."
-	registerToolPair(s, "cortex_fact_put", "fieldnotes_fact_put", factPutDesc, true, nb.PutFact)
+	addTool(s, "cortex_fact_put", factPutDesc, true, nb.PutFact)
 
-	// 3. Fact Retire (cortex_fact_retire + fieldnotes_fact_retire)
+	// 3. Fact Retire
 	factRetireDesc := "CAS-retire a fact, preserving an opaque tombstone revision. Cannot retire @context. Retry the identical request with the same operation_id."
-	registerToolPair(s, "cortex_fact_retire", "fieldnotes_fact_retire", factRetireDesc, true, nb.RetireFact)
+	addTool(s, "cortex_fact_retire", factRetireDesc, true, nb.RetireFact)
 
-	// 4. Event Append (cortex_event_append + fieldnotes_event_append)
-	eventAppendDesc := "Append an immutable completed progress milestone or chronological outcome with evidence (e.g. 'PR #42 merged', 'Refactored auth handler', 'Tests passed')."
-	registerToolPair(s, "cortex_event_append", "fieldnotes_event_append", eventAppendDesc, false, nb.AppendEvent)
+	// 4. Event Append
+	eventAppendDesc := "Append an immutable completed progress milestone or chronological outcome with evidence. Call immediately after major actions, including investigations, root cause discoveries, verified code slices, or commits."
+	addTool(s, "cortex_event_append", eventAppendDesc, false, nb.AppendEvent)
 
-	// 5. Find (cortex_find + fieldnotes_find)
+	// 5. Find
 	findDesc := "Browse or search references across facts and events (newest first). Query uses ANDed case-insensitive literal substrings. Resume with cursor."
-	registerToolPair(s, "cortex_find", "fieldnotes_find", findDesc, false, nb.Find)
+	addTool(s, "cortex_find", findDesc, false, nb.Find)
 
-	// 6. Read (cortex_read + fieldnotes_read)
+	// 6. Read
 	readDesc := "Read one to ten ordered references. Only complete records, missing statuses, or versioned tombstones are returned; bodies are never chunked."
-	registerToolPair(s, "cortex_read", "fieldnotes_read", readDesc, false, nb.Read)
-}
-
-func registerToolPair[In, Out any](s *mcp.Server, primary, alias, desc string, destructive bool, fn func(context.Context, In) (Out, error)) {
-	addTool(s, primary, desc, destructive, fn)
-	if alias != "" {
-		addTool(s, alias, desc+" (alias for "+primary+")", destructive, fn)
-	}
+	addTool(s, "cortex_read", readDesc, false, nb.Read)
 }
 
 func addTool[In, Out any](s *mcp.Server, name, description string, destructive bool, run func(context.Context, In) (Out, error)) {
@@ -133,7 +126,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 		return
 	}
 
-	// 7. Bootstrap (cortex_bootstrap + beliefs_bootstrap)
+	// 7. Bootstrap
 	bootstrapDesc := "Session bootstrap: returns core operating principles (ODAV, Least-to-Most, Project-State) and the active task-triggered topics router."
 	bootstrapHandler := func(ctx context.Context, in BootstrapInput) (any, error) {
 		if strings.TrimSpace(in.Query) == "" {
@@ -151,7 +144,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 			Topics: b.ListTopics(in.Query),
 		}, nil
 	}
-	registerToolPair(s, "cortex_bootstrap", "beliefs_bootstrap", bootstrapDesc, false, bootstrapHandler)
+	addTool(s, "cortex_bootstrap", bootstrapDesc, false, bootstrapHandler)
 
 	// 8. Get Beliefs (defaults to array of topics)
 	getDesc := formatGetBeliefDescription(b)
@@ -196,7 +189,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 			Topics: topics,
 		}, nil
 	}
-	registerToolPair(s, "cortex_get_belief", "beliefs_get", getDesc, false, getHandler)
+	addTool(s, "cortex_get_belief", getDesc, false, getHandler)
 
 	// 9. Beliefs Search
 	searchDesc := "Search normative belief rules using natural language questions or keywords, optionally inlining full markdown guidance."
@@ -204,7 +197,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 		res := b.SearchTopics(in.Query, in.InlineContent, in.TopKFull)
 		return res, nil
 	}
-	registerToolPair(s, "cortex_beliefs_search", "beliefs_search", searchDesc, false, searchHandler)
+	addTool(s, "cortex_beliefs_search", searchDesc, false, searchHandler)
 }
 
 // ----------------------------------------------------------------------------
@@ -213,7 +206,7 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 
 type CortexSearchInput struct {
 	Query string `json:"query" jsonschema:"Search query spanning both normative rules and episodic project history."`
-	Scope string `json:"scope,omitempty" jsonschema:"'all' (default), 'beliefs', or 'fieldnotes'."`
+	Scope string `json:"scope,omitempty" jsonschema:"'all' (default), 'beliefs', or 'memory'."`
 }
 
 func registerCrossCuttingTools(s *mcp.Server, nb *notebook.Store, b *beliefs.Store) {
@@ -234,10 +227,10 @@ func registerCrossCuttingTools(s *mcp.Server, nb *notebook.Store, b *beliefs.Sto
 			result["beliefs"] = beliefMatches.Matches
 		}
 
-		if (scope == "all" || scope == "fieldnotes") && nb != nil {
+		if (scope == "all" || scope == "memory" || scope == "fieldnotes") && nb != nil {
 			findRes, err := nb.Find(ctx, notebook.FindInput{Query: in.Query})
 			if err == nil {
-				result["fieldnotes"] = findRes
+				result["memory"] = findRes
 			}
 		}
 
