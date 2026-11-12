@@ -70,7 +70,7 @@ This outputs an immutable, zero-drift directive:
 <!-- CORTEX_BELIEFS_START -->
 ## Agent Operating Beliefs & Context
 
-**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap' to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap({})' (with zero arguments) to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
 
 Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
 
@@ -85,10 +85,14 @@ Before executing any task phase (e.g. coding, testing, git stacking, designing, 
 2. **Never Goes Stale**: Adding topics or configuring local overrides (`--additional-beliefs`) requires zero updates to `AGENTS.md`.
 
 ### In-Place Table Sync (`cortex sync`)
-To sync any target `AGENTS.md` in-place, Cortex updates the block between `<!-- CORTEX_BELIEFS_START -->` and `<!-- CORTEX_BELIEFS_END -->` (or legacy markers) with the clean mandatory protocol:
+To sync instructions into `AGENTS.md` or `CLAUDE.md` in-place, Cortex updates the block between `<!-- CORTEX_BELIEFS_START -->` and `<!-- CORTEX_BELIEFS_END -->` (or auto-inserts the block if markers don't exist yet):
 
 ```bash
-npx -y @mrvicadai/cortex sync AGENTS.md
+# Auto-detects and syncs AGENTS.md and/or CLAUDE.md
+npx -y @mrvicadai/cortex sync
+
+# Or target a specific file
+npx -y @mrvicadai/cortex sync CLAUDE.md
 ```
 
 ---

@@ -68,19 +68,79 @@ User defined post-amble rule that must be preserved.
 	}
 }
 
-func TestSyncFileWithoutMarkersFails(t *testing.T) {
+func TestSyncFileWithoutMarkersInsertsBlock(t *testing.T) {
 	tempDir := t.TempDir()
 	targetFile := filepath.Join(tempDir, "AGENTS.md")
 
-	content := "# Just a normal file without markers"
+	content := "# Just a normal file without markers\n\nSome guidelines here."
 	if err := os.WriteFile(targetFile, []byte(content), 0644); err != nil {
 		t.Fatalf("writing test file: %v", err)
 	}
 
 	bStore, _ := beliefs.NewStore("")
 	err := syncFile(targetFile, bStore)
-	if err == nil {
-		t.Error("expected error when markers are missing, got nil")
+	if err != nil {
+		t.Fatalf("expected sync to succeed and insert block, got error: %v", err)
+	}
+
+	updatedBytes, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatalf("reading updated file: %v", err)
+	}
+	updated := string(updatedBytes)
+	if !strings.Contains(updated, "<!-- CORTEX_BELIEFS_START -->") {
+		t.Error("expected inserted block to contain start marker")
+	}
+	if !strings.Contains(updated, "Some guidelines here.") {
+		t.Error("expected original file content to be preserved")
+	}
+}
+
+func TestSyncClaudeMD(t *testing.T) {
+	tempDir := t.TempDir()
+	targetFile := filepath.Join(tempDir, "CLAUDE.md")
+
+	content := "# Project Rules\n\nExisting rule."
+	if err := os.WriteFile(targetFile, []byte(content), 0644); err != nil {
+		t.Fatalf("writing test file: %v", err)
+	}
+
+	bStore, _ := beliefs.NewStore("")
+	err := syncFile(targetFile, bStore)
+	if err != nil {
+		t.Fatalf("expected sync on CLAUDE.md to succeed, got: %v", err)
+	}
+
+	updatedBytes, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatalf("reading updated file: %v", err)
+	}
+	updated := string(updatedBytes)
+	if !strings.Contains(updated, "<!-- CORTEX_BELIEFS_START -->") || !strings.Contains(updated, "cortex_bootstrap({})") {
+		t.Errorf("expected CLAUDE.md to have synced instruction block, got: %s", updated)
+	}
+	if !strings.Contains(updated, "Existing rule.") {
+		t.Error("expected original content of CLAUDE.md to be preserved")
+	}
+}
+
+func TestSyncNonExistentFileCreatesFile(t *testing.T) {
+	tempDir := t.TempDir()
+	targetFile := filepath.Join(tempDir, "AGENTS.md")
+
+	bStore, _ := beliefs.NewStore("")
+	err := syncFile(targetFile, bStore)
+	if err != nil {
+		t.Fatalf("expected sync on non-existent file to succeed by creating it, got: %v", err)
+	}
+
+	updatedBytes, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatalf("reading updated file: %v", err)
+	}
+	updated := string(updatedBytes)
+	if !strings.Contains(updated, "<!-- CORTEX_BELIEFS_START -->") {
+		t.Error("expected created file to contain cortex instruction block")
 	}
 }
 

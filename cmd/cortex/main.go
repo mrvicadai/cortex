@@ -79,18 +79,31 @@ func run(args []string, stdout, stderr io.Writer) error {
 			fmt.Fprintln(stdout, bStore.GetInlineSnippet())
 			return nil
 		case "sync", "--sync":
-			targetPath := "AGENTS.md"
+			var targets []string
 			if len(args) > 1 {
-				targetPath = args[1]
+				targets = []string{args[1]}
+			} else {
+				// Auto-detect AGENTS.md and CLAUDE.md in current directory
+				if _, err := os.Stat("AGENTS.md"); err == nil {
+					targets = append(targets, "AGENTS.md")
+				}
+				if _, err := os.Stat("CLAUDE.md"); err == nil {
+					targets = append(targets, "CLAUDE.md")
+				}
+				if len(targets) == 0 {
+					targets = []string{"AGENTS.md"}
+				}
 			}
 			bStore, err := beliefs.NewStore("")
 			if err != nil {
 				return err
 			}
-			if err := syncFile(targetPath, bStore); err != nil {
-				return err
+			for _, targetPath := range targets {
+				if err := syncFile(targetPath, bStore); err != nil {
+					return err
+				}
+				fmt.Fprintf(stdout, "Successfully synced %s with current beliefs table.\n", targetPath)
 			}
-			fmt.Fprintf(stdout, "Successfully synced %s with current beliefs table.\n", targetPath)
 			return nil
 		case "instructions", "--instructions":
 			bStore, err := beliefs.NewStore("")
