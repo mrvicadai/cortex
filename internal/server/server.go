@@ -13,7 +13,7 @@ import (
 	"github.com/mrvicadai/cortex/internal/wire"
 )
 
-const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. Check directory from cortex_context to confirm the active project notebook. Use cortex_get_belief to load authoritative guidance before coding, testing, or opening merge requests. After major actions (including investigations, root cause discoveries, or verified commits), immediately record progress milestones with cortex_event_append."
+const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. At the start of every session, call cortex_bootstrap({}) (with zero arguments) to load core operating principles and topic triggers. Check directory from cortex_context to confirm the active project notebook. Use cortex_get_belief to load authoritative guidance before coding, testing, or opening merge requests. After major actions (including investigations, root cause discoveries, or verified commits), immediately record progress milestones with cortex_event_append."
 
 type ServerOptions struct {
 	Notebook *notebook.Store
@@ -97,7 +97,7 @@ func addTool[In, Out any](s *mcp.Server, name, description string, destructive b
 // ----------------------------------------------------------------------------
 
 type BootstrapInput struct {
-	Query string `json:"query,omitempty" jsonschema:"Optional keyword filter to filter available belief topics (e.g., 'git', 'testing')."`
+	Query string `json:"query,omitempty" jsonschema:"Optional keyword filter for topic router. NOTE: At session start, always call cortex_bootstrap({}) with zero arguments to load core operating principles."`
 }
 
 type GetBeliefsInput struct {
@@ -127,21 +127,23 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 	}
 
 	// 7. Bootstrap
-	bootstrapDesc := "Session bootstrap: returns core operating principles (ODAV, Least-to-Most, Project-State) and the active task-triggered topics router."
+	bootstrapDesc := "Session bootstrap: returns core operating principles (ODAV, Least-to-Most, Project-State) and the active task-triggered topics router. Call with zero arguments ({}) at session start."
 	bootstrapHandler := func(ctx context.Context, in BootstrapInput) (any, error) {
+		var topics []beliefs.TopicMetadata
 		if strings.TrimSpace(in.Query) == "" {
-			return struct {
-				Bootstrap string                  `json:"bootstrap"`
-				Topics    []beliefs.TopicMetadata `json:"topics"`
-			}{
-				Bootstrap: b.GetBootstrapPayload(),
-				Topics:    b.ListTopics(""),
-			}, nil
+			topics = b.ListTopics("")
+		} else {
+			topics = b.ListTopics(in.Query)
+			if len(topics) == 0 {
+				topics = b.ListTopics("") // Fallback so topics are never empty
+			}
 		}
 		return struct {
-			Topics []beliefs.TopicMetadata `json:"topics"`
+			Bootstrap string                  `json:"bootstrap"`
+			Topics    []beliefs.TopicMetadata `json:"topics"`
 		}{
-			Topics: b.ListTopics(in.Query),
+			Bootstrap: b.GetBootstrapPayload(),
+			Topics:    topics,
 		}, nil
 	}
 	addTool(s, "cortex_bootstrap", bootstrapDesc, false, bootstrapHandler)

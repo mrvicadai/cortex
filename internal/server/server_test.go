@@ -230,7 +230,7 @@ func TestBeliefToolsExecution(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// 1. cortex_bootstrap
+	// 1. cortex_bootstrap (zero args)
 	bootRes, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name:      "cortex_bootstrap",
 		Arguments: map[string]any{},
@@ -243,7 +243,37 @@ func TestBeliefToolsExecution(t *testing.T) {
 		t.Errorf("expected bootstrap payload to contain ODAV, got: %s", bootText)
 	}
 
-	// 2. cortex_get_belief with batch topics (user default: array of topics)
+	// 1b. cortex_bootstrap with accidental query args STILL returns foundational bootstrap
+	queryBootRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_bootstrap",
+		Arguments: map[string]any{
+			"query": "investigation root cause user search evidence project-state",
+		},
+	})
+	if err != nil {
+		t.Fatalf("call cortex_bootstrap with query failed: %v", err)
+	}
+	queryBootText := extractText(queryBootRes)
+	if !containsString(queryBootText, "ODAV") || !containsString(queryBootText, "Project Memory") {
+		t.Errorf("expected bootstrap with query to still contain foundational principles, got: %s", queryBootText)
+	}
+
+	// 2. cortex_get_belief with foundational topic 'project-state'
+	psRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_get_belief",
+		Arguments: map[string]any{
+			"topics": []string{"project-state"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("call cortex_get_belief project-state failed: %v", err)
+	}
+	psText := extractText(psRes)
+	if !containsString(psText, "Project state") && !containsString(psText, "Project Memory") {
+		t.Errorf("expected project-state belief content, got: %s", psText)
+	}
+
+	// 3. cortex_get_belief with batch topics (user default: array of topics)
 	getBatchRes, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name: "cortex_get_belief",
 		Arguments: map[string]any{
