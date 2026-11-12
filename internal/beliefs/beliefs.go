@@ -150,11 +150,20 @@ func NewStore(overrideDir string) (*Store, error) {
 		if err != nil {
 			return nil, fmt.Errorf("reading embedded foundational %s: %w", f.file, err)
 		}
+		content := strings.TrimSpace(string(data))
 		s.foundational = append(s.foundational, FoundationalPrinciple{
 			ID:      f.id,
 			Title:   f.title,
-			Content: strings.TrimSpace(string(data)),
+			Content: content,
 		})
+		s.topics[f.id] = TopicMetadata{
+			ID:      f.id,
+			Title:   f.title,
+			Trigger: "Foundational operating principle (always active)",
+			Version: PackageVersion,
+			Origin:  "foundational",
+			Content: content,
+		}
 	}
 
 	// 2. Load embedded topics
@@ -456,8 +465,14 @@ func (s *Store) SearchTopics(query string, inlineContent bool, topK int) SearchR
 		return SearchResult{}
 	}
 
+	var searchOrder []string
+	for _, f := range s.foundational {
+		searchOrder = append(searchOrder, f.ID)
+	}
+	searchOrder = append(searchOrder, s.topicOrder...)
+
 	var matches []SearchMatch
-	for _, id := range s.topicOrder {
+	for _, id := range searchOrder {
 		topic := s.topics[id]
 		score := 0
 		lowerID := strings.ToLower(topic.ID)
@@ -569,7 +584,7 @@ func (s *Store) GetInlineSnippet() string {
 	return `<!-- CORTEX_BELIEFS_START -->
 ## Agent Operating Beliefs & Context
 
-**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap' to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap({})' (with zero arguments) to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
 
 Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
 

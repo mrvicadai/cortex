@@ -72,7 +72,19 @@ func TestGetTopicsBatch(t *testing.T) {
 		t.Errorf("unexpected batch order: %+v", batch)
 	}
 
-	// 3. Unknown topic returns error
+	// 3. Foundational principles accessible via GetTopics
+	foundationalGot, err := store.GetTopics([]string{"project-state", "odav", "least-to-most"})
+	if err != nil {
+		t.Fatalf("failed to get foundational topics: %v", err)
+	}
+	if len(foundationalGot) != 3 {
+		t.Fatalf("expected 3 foundational topics, got %d", len(foundationalGot))
+	}
+	if foundationalGot[0].Origin != "foundational" || foundationalGot[0].ID != "project-state" {
+		t.Errorf("unexpected foundational topic metadata: %+v", foundationalGot[0])
+	}
+
+	// 4. Unknown topic returns error
 	_, err = store.GetTopics([]string{"non-existent-topic"})
 	if err == nil {
 		t.Error("expected error for unknown topic, got nil")
@@ -107,6 +119,14 @@ func TestSearchTopicsWithInline(t *testing.T) {
 	}
 	if len(inlineRes.InlineContent[0].Content) < 50 {
 		t.Errorf("inline content unexpectedly empty")
+	}
+	// Search foundational principles
+	foundationalSearch := store.SearchTopics("project-state", false, 0)
+	if len(foundationalSearch.Matches) == 0 {
+		t.Fatalf("expected matches for foundational topic 'project-state', got 0")
+	}
+	if foundationalSearch.Matches[0].TopicID != "project-state" {
+		t.Errorf("expected top match to be 'project-state', got %s", foundationalSearch.Matches[0].TopicID)
 	}
 }
 
@@ -282,8 +302,8 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	if !strings.Contains(snippet, "cortex_event_append") {
 		t.Errorf("snippet missing 'cortex_event_append'")
 	}
-	if !strings.Contains(snippet, "cortex_bootstrap") {
-		t.Errorf("snippet missing 'cortex_bootstrap'")
+	if !strings.Contains(snippet, "cortex_bootstrap({})") || !strings.Contains(snippet, "zero arguments") {
+		t.Errorf("snippet missing 'cortex_bootstrap({})' or 'zero arguments' directive")
 	}
 	if strings.Contains(snippet, "beliefs_bootstrap") || strings.Contains(snippet, "fieldnotes_") {
 		t.Errorf("snippet unexpectedly contains legacy aliases")
