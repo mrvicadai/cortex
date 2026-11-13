@@ -2,7 +2,7 @@
 
 Scope: Read and write project facts and events with Cortex Project Memory.
 
-- Start with `cortex_context({})`; confirm its notebook directory matches the intended project before saving.
+- At session start, call `cortex_context({})` to inspect recent events and active `@context`, and confirm its notebook directory matches the intended project before saving.
 - Treat worktree notebooks as separate; reconnect to the intended project's Cortex server rather than saving unrelated state in the current notebook.
 - Find with `cortex_find`; read full records with `cortex_read`, following cursors.
 - **Distinguish Facts vs. Events strictly:**

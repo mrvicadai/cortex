@@ -70,7 +70,9 @@ This outputs an immutable, zero-drift directive:
 <!-- CORTEX_BELIEFS_START -->
 ## Agent Operating Beliefs & Context
 
-**MANDATORY PROTOCOL**: At the start of every session, you MUST call 'cortex_bootstrap({})' (with zero arguments) to load the core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+**MANDATORY PROTOCOL**: At the start of every session, you MUST:
+1. Call 'cortex_bootstrap({})' (with zero arguments) to load core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
+2. Call 'cortex_context({})' to load recent milestone events, past investigations, and persistent @context.
 
 Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
 

@@ -305,6 +305,9 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	if !strings.Contains(snippet, "cortex_bootstrap({})") || !strings.Contains(snippet, "zero arguments") {
 		t.Errorf("snippet missing 'cortex_bootstrap({})' or 'zero arguments' directive")
 	}
+	if !strings.Contains(snippet, "cortex_context({})") {
+		t.Errorf("snippet missing 'cortex_context({})' directive")
+	}
 	if strings.Contains(snippet, "beliefs_bootstrap") || strings.Contains(snippet, "fieldnotes_") {
 		t.Errorf("snippet unexpectedly contains legacy aliases")
 	}
