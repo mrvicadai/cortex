@@ -1,0 +1,54 @@
+version: 2
+
+project_name: cortex
+
+builds:
+  - id: cortex
+    main: ./cmd/cortex
+    binary: cortex
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - repository:
+      owner: mrvicadai
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    skip_upload: "{{ not .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/mrvicadai/cortex"
+    description: "Unified Agent Context Architecture: normative beliefs and persistent episodic memory for AI coding agents"
+    license: "MIT"
+    test: |
+      system "#{bin}/cortex", "--version"
+    install: |
+      bin.install "cortex"
