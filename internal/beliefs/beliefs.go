@@ -67,6 +67,12 @@ var defaultTopicDefinitions = []struct {
 		file:    "embedded/topics/project-design.md",
 	},
 	{
+		id:      "project-planning",
+		title:   "Project Planning & Task Breakdown",
+		trigger: "Breaking down a complex project, RFC, or engineering blueprint into actionable tickets or tasks",
+		file:    "embedded/topics/project-planning.md",
+	},
+	{
 		id:      "walkthrough",
 		title:   "Project Walkthroughs",
 		trigger: "Authoring a whole-project walkthrough or onboarding explainer",

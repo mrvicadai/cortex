@@ -101,7 +101,7 @@ type BootstrapInput struct {
 }
 
 type GetBeliefsInput struct {
-	Topics  []string `json:"topics,omitempty" jsonschema:"Array of topic IDs to retrieve in a single batch (default parameter). Allowed: coding-standards, testing, mr-rules, git-stacking, project-design, walkthrough, datadog-query-craft, premise-check, context-hygiene, governance."`
+	Topics  []string `json:"topics,omitempty" jsonschema:"Array of topic IDs to retrieve in a single batch (default parameter). Allowed: coding-standards, testing, mr-rules, git-stacking, project-design, project-planning, walkthrough, datadog-query-craft, premise-check, context-hygiene, governance, custom-beliefs."`
 	TopicID string   `json:"topic_id,omitempty" jsonschema:"Optional single topic ID."`
 	Topic   string   `json:"topic,omitempty" jsonschema:"Optional single topic ID."`
 }

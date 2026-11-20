@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 11 {
-		t.Fatalf("expected 11 default topics, got %d", len(topics))
+	if len(topics) != 12 {
+		t.Fatalf("expected 12 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -39,6 +39,18 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 	if !strings.Contains(cb[0].Content, "YAML frontmatter") {
 		t.Errorf("expected custom-beliefs content to mention YAML frontmatter")
+	}
+
+	// Verify project-planning topic exists and encodes the 3-phase breakdown rules
+	pp, err := store.GetTopics([]string{"project-planning"})
+	if err != nil {
+		t.Fatalf("getting project-planning topic: %v", err)
+	}
+	if pp[0].Title != "Project Planning & Task Breakdown" {
+		t.Errorf("expected title 'Project Planning & Task Breakdown', got %s", pp[0].Title)
+	}
+	if !strings.Contains(pp[0].Content, "One-Sentence Diff Test") || !strings.Contains(pp[0].Content, "cortex_fact_put") {
+		t.Errorf("expected project-planning content to include sizing gates and Cortex memory rules")
 	}
 }
 
@@ -182,8 +194,8 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 15 { // 11 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
-		t.Fatalf("expected 15 topics in root router, got %d", len(topics))
+	if len(topics) != 16 { // 12 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 16 topics in root router, got %d", len(topics))
 	}
 
 	// Verify root router contains domain routers, NOT raw nested sub-topics
