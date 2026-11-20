@@ -61,8 +61,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if rfc[0].Title != "RFC Authoring & Agent-Ready Blueprints" {
 		t.Errorf("expected title 'RFC Authoring & Agent-Ready Blueprints', got %s", rfc[0].Title)
 	}
-	if !strings.Contains(rfc[0].Content, "Concreteness gate") || !strings.Contains(rfc[0].Content, "Codebase Anchors (Verified)") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Jira Slicing") {
-		t.Errorf("expected rfc-authoring content to include Concreteness gate, Codebase Anchors, and Section 7 gate")
+	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "No dense paragraphs") || !strings.Contains(rfc[0].Content, "Codebase Anchors (Verified)") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Jira Slicing") {
+		t.Errorf("expected rfc-authoring content to include Concreteness & readability rules, Codebase Anchors, and Section 7 gate")
 	}
 
 	// Verify removed project-design topic is no longer registered
