@@ -20,6 +20,7 @@ Scope: Authoring or reviewing an agent-ready RFC (and optional ADRs) after Stage
 - **No dense paragraphs:** Use short 1–2 sentence bullets, numbered steps, and Markdown tables instead of walls of text.
 - **Simple language:** Write in plain, direct words; cut filler prose.
 - **Explicit Schema & API:** Put table columns, types, defaults, indexes, HTTP methods/paths, JSON request/response shapes, and status codes in tables or code blocks—never bury them in prose.
+- **Table clarity:** Every row in `Schema / Storage` and `API / Events` MUST include a plain-language **Description (Why + What)** plus a **dead-simple example**; `API / Events` MUST have separate **Request** and **Response** columns.
 - **Vague (Rejected):** *"Update the webhooks table to track retries and add an admin replay endpoint."*
 - **Concrete (Required):** *"Add `attempt_count int DEFAULT 0` and `next_retry_at timestamptz` to `webhook_deliveries`; expose `POST /admin/v1/webhooks/:id/replay` returning `202` (`{"status":"retrying"}`) or `409` (`{"error":"not_dead_letter"}`)."*
 - **Mermaid diagrams (when helpful):** Use `stateDiagram-v2` when an entity has >= 3 states, and `sequenceDiagram` when >= 3 components interact across async/network boundaries (avoid `Note over` syntax). Never repeat diagram arrows in prose; list only invariants/exceptions.
@@ -47,10 +48,11 @@ Scope: Authoring or reviewing an agent-ready RFC (and optional ADRs) after Stage
 ## 4. Proposed Design
 
 ### Schema / Storage
-| Table | Column / Index | Type & Default | Notes |
+| Table | Column / Index | Type & Default | Description (Why + What) & Example |
 | :--- | :--- | :--- | :--- |
-| `webhook_deliveries` | `attempt_count`, `next_retry_at`, `last_error` | `int` (0), `timestamptz` (null), `text` | Add `retrying`, `dead_letter` to `status` |
-| `webhook_deliveries` | `idx_webhooks_retry` (partial index) | `(status, next_retry_at)` | `WHERE status = 'retrying'` |
+| `webhook_deliveries` | `attempt_count` | `int` (default `0`) | Tracks delivery tries so workers stop at 5. *Ex:* `3` |
+| `webhook_deliveries` | `next_retry_at` | `timestamptz` (null) | Schedules when the next retry runs; null if done. *Ex:* `2026-11-20T15:05:00Z` |
+| `webhook_deliveries` | `idx_webhooks_retry` | `(status, next_retry_at)` | Speeds up polling due retries without scanning delivered rows. *Ex:* `WHERE status = 'retrying'` |
 
 ### Worker / State Flow
 ```mermaid
@@ -65,9 +67,9 @@ stateDiagram-v2
 - **Invariants:** Compute `next_retry_at` via `pkg/retry/exponential.go#Backoff`; increment `attempt_count` atomically on failure.
 
 ### API / Events
-| Endpoint / Event | Behavior | Request / Response Shape |
-| :--- | :--- | :--- |
-| `POST /admin/v1/webhooks/:id/replay` | Reset `dead_letter` -> `retrying`, `attempt_count = 0` | `202`: `{"status":"retrying","attempt_count":0}` / `409`: `{"error":"not_dead_letter"}` |
+| Endpoint / Event | Description (Why + What) & Example | Request | Response |
+| :--- | :--- | :--- | :--- |
+| `POST /admin/v1/webhooks/:id/replay` | Re-queues a `dead_letter` webhook after the target recovers; resets `attempt_count = 0`. *Ex:* Replay billing event `wh_123`. | Path `:id` (`wh_123`), body `{"reason":"endpoint fixed"}` | `202`: `{"status":"retrying","attempt_count":0}` / `409`: `{"error":"not_dead_letter"}` |
 
 ### Failure Modes & Concurrency
 | Failure / Race | Guard & Recovery |
