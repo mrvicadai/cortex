@@ -125,7 +125,7 @@ func TestServerToolList(t *testing.T) {
 			if !containsString(tool.Description, "Active topics & triggers") {
 				t.Errorf("expected dynamic router in cortex_get_belief description, got: %s", tool.Description)
 			}
-			if !containsString(tool.Description, "coding-standards") || !containsString(tool.Description, "mr-rules") || !containsString(tool.Description, "project-planning") {
+			if !containsString(tool.Description, "coding-standards") || !containsString(tool.Description, "mr-rules") || !containsString(tool.Description, "project-planning") || !containsString(tool.Description, "rfc-authoring") {
 				t.Errorf("expected topic IDs in description, got: %s", tool.Description)
 			}
 		}
