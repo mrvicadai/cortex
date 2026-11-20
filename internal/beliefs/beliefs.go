@@ -61,15 +61,21 @@ var defaultTopicDefinitions = []struct {
 		file:    "embedded/topics/git-stacking.md",
 	},
 	{
+		id:      "feasibility-audit",
+		title:   "Feasibility & Dependency Audit (Stage 1)",
+		trigger: "Stage 1 pre-RFC gate: auditing codebase, external APIs, data contracts, auth, and quotas before writing an RFC",
+		file:    "embedded/topics/feasibility-audit.md",
+	},
+	{
 		id:      "rfc-authoring",
-		title:   "RFC Authoring & Agent-Ready Blueprints",
-		trigger: "Writing or reviewing an RFC (Request for Comments) before project planning or ticket slicing",
+		title:   "RFC Authoring & Agent-Ready Blueprints (Stage 2)",
+		trigger: "Stage 2: writing or reviewing an agent-ready RFC (and ADRs) after Stage 1 audit clearance",
 		file:    "embedded/topics/rfc-authoring.md",
 	},
 	{
 		id:      "project-planning",
-		title:   "Project Planning & Task Breakdown",
-		trigger: "Breaking down a complex project, RFC, or engineering blueprint into actionable tickets or tasks",
+		title:   "Project Planning & Task Breakdown (Stage 3)",
+		trigger: "Stage 3: slicing an accepted RFC (with empty Section 7) into PR-sized Jira tickets or tasks",
 		file:    "embedded/topics/project-planning.md",
 	},
 	{
