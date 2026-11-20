@@ -15,7 +15,7 @@ Offline link validation does not establish that external links are available or 
 Never write meta-commentary about this base's past; write the imperative it implies instead.
 Prefer an enforcing mechanism; when none enforces a constraint, label the rule aspirational rather than implying enforcement.
 Replace a rule requiring judgement when judgement is compromised with one that removes the choice.
-Keep maintained rule Markdown at or below 100 physical lines; split over-limit rules rather than compressing them.
+Keep maintained rule Markdown at or below 120 physical lines; split over-limit rules rather than compressing them.
 For TypeScript authored as part of a knowledge graph outside `topics/`, keep each source at most 150 physical lines and split by cohesive read moments.
 Project state uses the caps and update rules in [project-state policy](operating/project-state.md).
 Before and after editing Markdown, record `wc -c` and `wc -l`; reflow without content removal is not pruning.
@@ -40,7 +40,7 @@ On every user correction, harvest only the rule that would have prevented it; fo
 Search `topics/` before writing each candidate; a hit is a routing or wording defect, so fix the trigger or wording and write nothing new.
 Convert each surviving lesson into one imperative rule or load-bearing fact, place it with its owner, and create a routed file only when it has no owner.
 On the third failure of the same rule, replace it with a mechanism or choice-free instruction; do not reword it.
-Prune and measure in the same self-improvement pass, split above 100 lines, commit `docs: <what the rules now say>`, and return file → rule, one line each, with no narrative.
+Prune and measure in the same self-improvement pass, split above 120 lines, commit `docs: <what the rules now say>`, and return file → rule, one line each, with no narrative.
 
 ## Git safety
 

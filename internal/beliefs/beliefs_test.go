@@ -61,8 +61,16 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if rfc[0].Title != "RFC Authoring & Agent-Ready Blueprints" {
 		t.Errorf("expected title 'RFC Authoring & Agent-Ready Blueprints', got %s", rfc[0].Title)
 	}
-	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "No dense paragraphs") || !strings.Contains(rfc[0].Content, "Codebase Anchors (Verified)") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Jira Slicing") {
-		t.Errorf("expected rfc-authoring content to include Concreteness & readability rules, Codebase Anchors, and Section 7 gate")
+	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "No dense paragraphs") || !strings.Contains(rfc[0].Content, "stateDiagram-v2") || !strings.Contains(rfc[0].Content, "sequenceDiagram") || !strings.Contains(rfc[0].Content, "Failure Modes & Concurrency") || !strings.Contains(rfc[0].Content, "Vague (Rejected)") {
+		t.Errorf("expected rfc-authoring content to include readability rules, Mermaid guidance, Failure Modes, and Vague/Concrete contrast")
+	}
+
+	gov, err := store.GetTopics([]string{"governance"})
+	if err != nil {
+		t.Fatalf("getting governance topic: %v", err)
+	}
+	if !strings.Contains(gov[0].Content, "120 physical lines") {
+		t.Errorf("expected governance content to enforce 120 physical lines cap")
 	}
 
 	// Verify removed project-design topic is no longer registered
