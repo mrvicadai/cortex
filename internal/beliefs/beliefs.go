@@ -67,6 +67,12 @@ var defaultTopicDefinitions = []struct {
 		file:    "embedded/topics/project-design.md",
 	},
 	{
+		id:      "rfc-authoring",
+		title:   "RFC Authoring & Agent-Ready Blueprints",
+		trigger: "Writing or reviewing an RFC (Request for Comments) before project planning or ticket slicing",
+		file:    "embedded/topics/rfc-authoring.md",
+	},
+	{
 		id:      "project-planning",
 		title:   "Project Planning & Task Breakdown",
 		trigger: "Breaking down a complex project, RFC, or engineering blueprint into actionable tickets or tasks",
