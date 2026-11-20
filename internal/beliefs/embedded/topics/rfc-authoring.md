@@ -1,12 +1,19 @@
-# RFC authoring and agent-ready blueprints
+# RFC authoring and agent-ready blueprints (Stage 2)
 
-Scope: Authoring or reviewing an agent-ready RFC before `project-planning` ticket slicing.
+Scope: Authoring or reviewing an agent-ready RFC (and optional ADRs) after Stage 1 (`feasibility-audit`) Gate 1 clearance, before `project-planning`.
 
-## Mandatory pre-write grounding & Cortex memory
+## Gate 1 prerequisite & Cortex memory
 
-- **Inspect the repo BEFORE drafting Section 4:** Query `cortex_find(kind: "fact", query: "<domain>")` and `cortex_read` matching IDs first, then read actual migrations, schemas, routes, and workers. Never guess or omit table, column, or route names.
-- Persist newly discovered **durable** invariants or accepted ADR decisions via `cortex_fact_put` (`topics` + `evidence`); never dump raw files or draft RFC prose into Facts.
-- Record RFC lifecycle milestones via `cortex_event_append`.
+- **Require Gate 1 clearance first:** Confirm Stage 1 (`feasibility-audit`) Dependency & Capability Matrix has no unresolved `Missing` or `Unverified` critical dependencies.
+- Query `cortex_find(kind: "fact", query: "<domain>")` and `cortex_read` matching IDs first, then read actual migrations, schemas, routes, and workers. Never guess table, column, or route names.
+- Persist newly discovered **durable** invariants and accepted ADR decisions via `cortex_fact_put` (`topics` + `evidence`); never dump raw files or draft RFC prose into Facts.
+- Record RFC lifecycle milestones (Draft -> Accepted, Section 7 cleared) via `cortex_event_append`.
+
+## RFC vs. ADR policy
+
+- **RFC only:** Implementing a feature or workflow within established architectural patterns.
+- **ADR only (`docs/adr/NNNN-title.md`):** Recording a single, hard-to-reverse architectural choice (e.g., storage engine, protocol).
+- **Both:** When a broad RFC makes major trade-offs, extract 1–3 concise (~1 page) immutable ADRs into `docs/adr/` and link them in `Related ADRs`.
 
 ## Concreteness & readability rules
 
@@ -16,7 +23,7 @@ Scope: Authoring or reviewing an agent-ready RFC before `project-planning` ticke
 - **Vague (Rejected):** *"Update the webhooks table to track retries and add an admin replay endpoint."*
 - **Concrete (Required):** *"Add `attempt_count int DEFAULT 0` and `next_retry_at timestamptz` to `webhook_deliveries`; expose `POST /admin/v1/webhooks/:id/replay` returning `202` (`{"status":"retrying"}`) or `409` (`{"error":"not_dead_letter"}`)."*
 - **Mermaid diagrams (when helpful):** Use `stateDiagram-v2` when an entity has >= 3 states, and `sequenceDiagram` when >= 3 components interact across async/network boundaries (avoid `Note over` syntax). Never repeat diagram arrows in prose; list only invariants/exceptions.
-- **Three agent-readiness rules:** (1) Keep Section 7 empty before `project-planning` slicing; (2) Name both **reuse** and **avoid** `file#Symbol` anchors in Section 3; (3) Use Section 6's 3–5 vertical milestones as slicing boundaries.
+- **Gate 2 hard stop:** Human owner must resolve all Section 7 (`Open Questions`) and mark `Status: Accepted` before Stage 3 (`project-planning`).
 
 ## RFC template (strict)
 
@@ -81,7 +88,7 @@ stateDiagram-v2
   2. Dispatcher retry/DLQ state machine verified with mock HTTP server tests.
   3. Admin replay endpoint + metrics verified end-to-end.
 
-## 7. Open Questions (Must Be Empty Before Jira Slicing)
+## 7. Open Questions (Must Be Empty Before Stage 3)
 - [x] Retry `408`/`429` only; send other `4xx` to `dead_letter` -> **Decision:** Locked.
 - [ ] [Open question] -> **Owner:** @[name] (Resolve before running `project-planning`)
 ```
