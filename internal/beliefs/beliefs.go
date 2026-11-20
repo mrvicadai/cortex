@@ -61,12 +61,6 @@ var defaultTopicDefinitions = []struct {
 		file:    "embedded/topics/git-stacking.md",
 	},
 	{
-		id:      "project-design",
-		title:   "Project Design & Technical Specifications",
-		trigger: "Designing a project, writing an RFC, or technical specification",
-		file:    "embedded/topics/project-design.md",
-	},
-	{
 		id:      "rfc-authoring",
 		title:   "RFC Authoring & Agent-Ready Blueprints",
 		trigger: "Writing or reviewing an RFC (Request for Comments) before project planning or ticket slicing",

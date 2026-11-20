@@ -2,11 +2,19 @@
 
 Scope: Authoring or reviewing an agent-ready RFC (Request for Comments) before `project-planning` ticket slicing.
 
-## Cortex memory integration (anti-bloat)
+## Mandatory pre-write grounding & Cortex memory
 
-- Before populating Section 3, query `cortex_find(kind: "fact", query: "<domain>")` and call `cortex_read` only on matching IDs to reuse verified module boundaries, patterns, and consumers.
-- Persist newly discovered **durable** architectural invariants or accepted ADR-level decisions via `cortex_fact_put` with scoped `topics` and `evidence`; never dump raw file contents or draft RFC prose into Facts.
+- **Inspect the repo BEFORE drafting Section 4:** Query `cortex_find(kind: "fact", query: "<domain>")` and `cortex_read` matching IDs first, then read actual migrations/schemas, routes/handlers, and workers in the codebase. Never guess or omit table, column, or route names.
+- Persist newly discovered **durable** architectural invariants or accepted ADR decisions via `cortex_fact_put` with scoped `topics` and `evidence`; never dump raw file contents or draft RFC prose into Facts.
 - Record RFC lifecycle milestones (e.g., Draft -> Accepted, Section 7 cleared) via `cortex_event_append`.
+
+## Concreteness gate (ban vague prose)
+
+Every RFC MUST specify exact identifiers verified from the codebase rather than abstract summaries:
+- **Schema / Storage:** Name exact tables/collections, columns, types, defaults, enum values, and indexes (e.g., `webhook_deliveries`: `attempt_count` int default 0, `next_retry_at` timestamptz, partial index `(status, next_retry_at) WHERE status = 'retrying'`).
+- **API / Events:** Name exact HTTP method + path (or event/topic name), status codes, and state transitions (e.g., `POST /admin/v1/webhooks/:id/replay` -> `202 Accepted` or `409 Conflict`).
+- **Rollout / Config:** Name exact feature flags or config keys (e.g., `WEBHOOK_RETRIES_ENABLED`).
+- **Reject generic placeholders:** Never write `"update the database"`, `"add an endpoint"`, or `"handle retries"` without exact table, column, route, and state-transition names.
 
 ## Three rules for agent-ready RFCs
 
@@ -28,36 +36,30 @@ Scope: Authoring or reviewing an agent-ready RFC (Request for Comments) before `
 ## 2. Goals & Non-Goals
 ### Goals (In Scope)
 - [Measurable outcome 1]
-- [Measurable outcome 2]
 
 ### Non-Goals (Explicitly Out of Scope)
-- [What we are NOT building in this project—feeds directly into ticket `Out of Scope` guards]
-- [Adjacent refactors or future phases to leave untouched]
+- [What we are NOT building—feeds directly into ticket `Out of Scope` guards]
 
 ## 3. Codebase Anchors (Verified)
-[Populate in read-only mode before finalizing the RFC:]
-- **Primary entry points / modules:** `path/to/service.ts`, `path/to/router.go`
-- **Existing patterns to reuse:** [e.g., "Follow retry middleware in `pkg/http/retry.go`"]
-- **Deprecated patterns to avoid:** [e.g., "Do not use legacy `v1/client.ts`"]
-- **Downstream consumers / contracts affected:** [e.g., "`billing-worker` consumes `OrderCreated` events"]
+- **Primary entry points / modules:** `internal/webhooks/dispatcher.go`, `internal/webhooks/store.go`
+- **Existing patterns to reuse:** [e.g., "Follow `pkg/retry/exponential.go` and `internal/api/audit_handler.go`"]
+- **Deprecated patterns to avoid:** [e.g., "Do not use `pkg/legacyqueue/poller.go`"]
+- **Downstream consumers / contracts affected:** [e.g., "`billing-metrics` reads `webhook_deliveries.status`; keep `delivered` and `failed`"]
 
 ## 4. Proposed Design
-[Describe architecture, data flow, schema/API changes, and failure modes. Focus on contracts and boundaries, not line-by-line code.]
-
-### Key Interfaces / Data Changes
-- **Schema / Storage:** [New tables, columns, or migrations]
-- **API / Events:** [Endpoints, request/response shapes, or queue payloads]
+- **Schema / Storage:** [Exact table, columns, types, defaults, enum values, and indexes—e.g., add `attempt_count` (int, default 0), `next_retry_at` (timestamptz, nullable), `last_error` (text) to `webhook_deliveries`; partial index on `(status, next_retry_at)` where `status = 'retrying'`]
+- **Worker / State Flow:** [Exact state transitions and helper calls—e.g., on non-2xx/timeout, if `attempt_count < 5`, set `status = 'retrying'`; on attempt 5 failure, set `status = 'dead_letter'`]
+- **API / Events:** [Exact method, path, payload, and status codes—e.g., `POST /admin/v1/webhooks/:id/replay` resets `dead_letter` -> `retrying` with `attempt_count = 0` (`202` / `409`)]
 
 ## 5. Alternatives Considered & Rejected
 - **[Option B]:** Rejected because [concrete trade-off, e.g., latency, operational cost, or coupling].
-*(Promote any major, hard-to-reverse choice here to a standalone ADR in `docs/adr/`.)*
 
 ## 6. Rollout & Verification Strategy
-- **Feature flags / rollout:** [e.g., dark launch behind `enable_new_sync`, backfill script, then 10% -> 100%]
-- **Vertical milestones (how we verify progress):**
-  1. [Milestone 1: e.g., Schema + repository layer passes integration tests]
-  2. [Milestone 2: e.g., Worker processes events idempotently in staging]
-  3. [Milestone 3: e.g., API endpoint + UI wired behind feature flag]
+- **Feature flags / rollout:** [Exact flag name + rollout order, e.g., ship migration first, enable `WEBHOOK_RETRIES_ENABLED` in staging]
+- **Vertical milestones (3–5 slicing boundaries):**
+  1. [Milestone 1: e.g., Schema migration + store methods pass DB integration tests]
+  2. [Milestone 2: e.g., Dispatcher retry/DLQ state machine verified with mock HTTP server tests]
+  3. [Milestone 3: e.g., Admin replay endpoint + metrics verified end-to-end]
 
 ## 7. Open Questions (Must Be Empty Before Jira Slicing)
 - [x] [Question 1] -> **Decision:** [Locked answer]

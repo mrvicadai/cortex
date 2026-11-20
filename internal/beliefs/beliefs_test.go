@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 13 {
-		t.Fatalf("expected 13 default topics, got %d", len(topics))
+	if len(topics) != 12 {
+		t.Fatalf("expected 12 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -53,7 +53,7 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		t.Errorf("expected project-planning content to include sizing gates and Cortex memory rules")
 	}
 
-	// Verify rfc-authoring topic exists and encodes the 7-section RFC template and Section 7 gate
+	// Verify rfc-authoring topic exists and encodes the Concreteness Gate, 7-section RFC template, and Section 7 gate
 	rfc, err := store.GetTopics([]string{"rfc-authoring"})
 	if err != nil {
 		t.Fatalf("getting rfc-authoring topic: %v", err)
@@ -61,8 +61,13 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if rfc[0].Title != "RFC Authoring & Agent-Ready Blueprints" {
 		t.Errorf("expected title 'RFC Authoring & Agent-Ready Blueprints', got %s", rfc[0].Title)
 	}
-	if !strings.Contains(rfc[0].Content, "Codebase Anchors (Verified)") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Jira Slicing") {
-		t.Errorf("expected rfc-authoring content to include Codebase Anchors and Section 7 gate")
+	if !strings.Contains(rfc[0].Content, "Concreteness gate") || !strings.Contains(rfc[0].Content, "Codebase Anchors (Verified)") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Jira Slicing") {
+		t.Errorf("expected rfc-authoring content to include Concreteness gate, Codebase Anchors, and Section 7 gate")
+	}
+
+	// Verify removed project-design topic is no longer registered
+	if _, err := store.GetTopics([]string{"project-design"}); err == nil {
+		t.Errorf("expected project-design topic to be removed")
 	}
 }
 
@@ -206,8 +211,8 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 17 { // 13 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
-		t.Fatalf("expected 17 topics in root router, got %d", len(topics))
+	if len(topics) != 16 { // 12 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 16 topics in root router, got %d", len(topics))
 	}
 
 	// Verify root router contains domain routers, NOT raw nested sub-topics
