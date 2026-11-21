@@ -73,8 +73,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if rfc[0].Title != "RFC Authoring & Agent-Ready Blueprints (Stage 2)" {
 		t.Errorf("expected title 'RFC Authoring & Agent-Ready Blueprints (Stage 2)', got %s", rfc[0].Title)
 	}
-	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "RFC vs. ADR policy") || !strings.Contains(rfc[0].Content, "stateDiagram-v2") || !strings.Contains(rfc[0].Content, "Failure Modes & Concurrency") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Stage 3") {
-		t.Errorf("expected rfc-authoring content to include ADR policy, readability rules, Mermaid guidance, Failure Modes, and Gate 2")
+	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "RFC vs. ADR policy") || !strings.Contains(rfc[0].Content, "stateDiagram-v2") || !strings.Contains(rfc[0].Content, "Failure Modes & Concurrency") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Stage 3") || !strings.Contains(rfc[0].Content, "Description (Why + What) & Example") || !strings.Contains(rfc[0].Content, "| Request | Response |") {
+		t.Errorf("expected rfc-authoring content to include ADR policy, readability rules, Mermaid guidance, Failure Modes, Gate 2, and explicit Description/Request/Response columns")
 	}
 
 	gov, err := store.GetTopics([]string{"governance"})
