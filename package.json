@@ -1,6 +1,6 @@
 {
   "name": "@mrvicadai/cortex",
-  "version": "0.1.0",
+  "version": "0.3.3",
   "type": "module",
   "description": "Unified Agent Context Architecture: normative beliefs and persistent episodic memory for AI coding agents",
   "bin": {
@@ -16,6 +16,7 @@
     "prepack": "npm run build",
     "prepare": "npm run build",
     "test": "go test ./...",
+    "release": "bash ./scripts/release.sh",
     "start": "node ./bin/cortex.js"
   },
   "keywords": [

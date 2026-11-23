@@ -8,12 +8,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/mrvicadai/cortex/internal/version"
 )
 
 //go:embed embedded/*
 var embeddedFS embed.FS
 
-const PackageVersion = "0.1.0"
+var PackageVersion = version.Version
 
 type FoundationalPrinciple struct {
 	ID      string `json:"id"`

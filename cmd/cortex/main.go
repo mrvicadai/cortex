@@ -11,11 +11,10 @@ import (
 	"github.com/mrvicadai/cortex/internal/beliefs"
 	"github.com/mrvicadai/cortex/internal/notebook"
 	"github.com/mrvicadai/cortex/internal/server"
+	"github.com/mrvicadai/cortex/internal/version"
 )
 
-const version = "0.1.0"
-
-const helpText = `@mrvicadai/cortex v0.1.0
+var helpText = fmt.Sprintf(`@mrvicadai/cortex v%s
 Unified Agent Context Architecture: normative beliefs and persistent episodic memory for AI coding agents.
 
 USAGE:
@@ -55,7 +54,7 @@ HARNESS CONFIGURATION (npx zero-install):
       }
     }
   }
-`
+`, version.Version)
 
 func main() {
 	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
@@ -113,7 +112,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 			fmt.Fprintln(stdout, bStore.GetBootstrapPayload())
 			return nil
 		case "--version", "-v", "version":
-			fmt.Fprintln(stdout, version)
+			fmt.Fprintln(stdout, version.Version)
 			return nil
 		case "--help", "-h", "help":
 			fmt.Fprint(stdout, helpText)
@@ -134,7 +133,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 
 	if *vFlag || *versionFlag {
-		fmt.Fprintln(stdout, version)
+		fmt.Fprintln(stdout, version.Version)
 		return nil
 	}
 

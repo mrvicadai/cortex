@@ -24,8 +24,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		if topic.Origin != "packaged" {
 			t.Errorf("expected origin 'packaged', got %s for topic %s", topic.Origin, topic.ID)
 		}
-		if topic.Version != "0.1.0" {
-			t.Errorf("expected version '0.1.0', got %s for topic %s", topic.Version, topic.ID)
+		if topic.Version != beliefs.PackageVersion {
+			t.Errorf("expected version %q, got %s for topic %s", beliefs.PackageVersion, topic.Version, topic.ID)
 		}
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/mrvicadai/cortex/internal/beliefs"
 	"github.com/mrvicadai/cortex/internal/notebook"
+	"github.com/mrvicadai/cortex/internal/version"
 	"github.com/mrvicadai/cortex/internal/wire"
 )
 
@@ -22,7 +23,7 @@ type ServerOptions struct {
 
 func New(opts ServerOptions) *mcp.Server {
 	s := mcp.NewServer(
-		&mcp.Implementation{Name: "cortex", Version: "0.1.0"},
+		&mcp.Implementation{Name: "cortex", Version: version.Version},
 		&mcp.ServerOptions{Instructions: serverInstructions},
 	)
 	s.AddReceivingMiddleware(validateArguments)

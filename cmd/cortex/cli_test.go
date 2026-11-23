@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/mrvicadai/cortex/internal/version"
 )
 
 func TestCLIHelpAndVersion(t *testing.T) {
@@ -14,8 +16,8 @@ func TestCLIHelpAndVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error on --version: %v", err)
 	}
-	if strings.TrimSpace(stdout.String()) != "0.1.0" {
-		t.Errorf("expected 0.1.0, got %s", stdout.String())
+	if strings.TrimSpace(stdout.String()) != version.Version {
+		t.Errorf("expected %s, got %s", version.Version, stdout.String())
 	}
 
 	// -v
@@ -24,8 +26,8 @@ func TestCLIHelpAndVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error on -v: %v", err)
 	}
-	if strings.TrimSpace(stdout.String()) != "0.1.0" {
-		t.Errorf("expected 0.1.0, got %s", stdout.String())
+	if strings.TrimSpace(stdout.String()) != version.Version {
+		t.Errorf("expected %s, got %s", version.Version, stdout.String())
 	}
 
 	// --help
