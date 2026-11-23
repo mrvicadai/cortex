@@ -22,11 +22,12 @@ Scope: Slicing an accepted RFC (with empty Section 7) into actionable, PR-sized 
 ## Phase 3: Output schema & Gate 3 dry-run
 
 - **Gate 3 (Dry-run before Jira writes):** Output proposed tickets in Markdown (or a local JSON manifest) for human review before invoking any remote Jira issue-creation APIs.
+- **Repo-prefixed summary:** Format every ticket title as `[<repo>] <summary>` (using `<Verb> <Concrete Target> so that <Outcome>`) so repository ownership is clear at a glance.
 - **Traceability:** Embed direct links to the RFC and relevant `docs/adr/` files in ticket descriptions where applicable.
 
 Output each ticket using ONLY these fields (no narrative fluff or speculative risks):
 
-### [TICKET-N] <Verb> <Concrete Target> so that <Outcome>
+### [TICKET-N] [<repo>] <Verb> <Concrete Target> so that <Outcome>
 - **Goal:** One sentence stating what changes and why.
 - **In Scope:** Bullet list of exact deliverables.
 - **Out of Scope:** 1–2 explicit boundaries derived from RFC Non-Goals.
