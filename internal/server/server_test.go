@@ -82,6 +82,9 @@ func TestServerToolList(t *testing.T) {
 		"cortex_event_append",
 		"cortex_find",
 		"cortex_read",
+		"cortex_todo_add",
+		"cortex_todo_done",
+		"cortex_todo_list",
 	}
 	for _, name := range expectedEpisodic {
 		if !names[name] {
@@ -102,8 +105,8 @@ func TestServerToolList(t *testing.T) {
 		}
 	}
 
-	if len(toolsRes.Tools) != 10 {
-		t.Errorf("expected exactly 10 canonical tools, got %d", len(toolsRes.Tools))
+	if len(toolsRes.Tools) != 13 {
+		t.Errorf("expected exactly 13 canonical tools, got %d", len(toolsRes.Tools))
 	}
 
 	// Verify retired legacy aliases do NOT exist
@@ -383,4 +386,70 @@ func extractText(res *mcp.CallToolResult) string {
 
 func containsString(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0 && (s == substr || filepath.Base(s) != "" && len(s) >= len(substr))
+}
+
+func TestServerTodoLifecycle(t *testing.T) {
+	session, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	addRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_todo_add",
+		Arguments: map[string]any{
+			"operation_id": "mcp-todo-1",
+			"title":        "Refactor retry loop",
+			"notes":        "internal/notebook",
+		},
+	})
+	if err != nil || addRes.IsError {
+		t.Fatalf("cortex_todo_add failed: err=%v, isError=%v, text=%s", err, addRes.IsError, extractText(addRes))
+	}
+
+	var receipt notebook.Receipt
+	if err := json.Unmarshal([]byte(extractText(addRes)), &receipt); err != nil {
+		t.Fatalf("unmarshal receipt failed: %v", err)
+	}
+
+	ctxRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_context",
+		Arguments: map[string]any{},
+	})
+	if err != nil || ctxRes.IsError {
+		t.Fatalf("cortex_context failed: err=%v, isError=%v", err, ctxRes.IsError)
+	}
+	var contextOut notebook.ContextResult
+	if err := json.Unmarshal([]byte(extractText(ctxRes)), &contextOut); err != nil {
+		t.Fatalf("unmarshal context failed: %v", err)
+	}
+	if contextOut.OpenTodoCount != 1 || len(contextOut.OpenTodos) != 1 || contextOut.OpenTodos[0].ID != receipt.ID {
+		t.Fatalf("expected 1 open todo %q in context, got count=%d len=%d", receipt.ID, contextOut.OpenTodoCount, len(contextOut.OpenTodos))
+	}
+
+	doneRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_todo_done",
+		Arguments: map[string]any{
+			"operation_id": "mcp-done-1",
+			"id":           receipt.ID,
+		},
+	})
+	if err != nil || doneRes.IsError {
+		t.Fatalf("cortex_todo_done failed: err=%v, isError=%v, text=%s", err, doneRes.IsError, extractText(doneRes))
+	}
+
+	listRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_todo_list",
+		Arguments: map[string]any{},
+	})
+	if err != nil || listRes.IsError {
+		t.Fatalf("cortex_todo_list failed: err=%v, isError=%v", err, listRes.IsError)
+	}
+	var listOut notebook.ListTodosResult
+	if err := json.Unmarshal([]byte(extractText(listRes)), &listOut); err != nil {
+		t.Fatalf("unmarshal list failed: %v", err)
+	}
+	if listOut.OpenCount != 0 || len(listOut.Items) != 0 {
+		t.Fatalf("expected 0 open todos after done, got count=%d len=%d", listOut.OpenCount, len(listOut.Items))
+	}
 }

@@ -35,6 +35,12 @@ func (s *Store) Context(ctx context.Context, in ContextInput) (ContextResult, er
 		if item.Status != "missing" {
 			result.Context = &item
 		}
+		todos, openCount, err := s.openTodosForContext(ctx)
+		if err != nil {
+			return ContextResult{}, err
+		}
+		result.OpenTodos = todos
+		result.OpenTodoCount = openCount
 	}
 	events, err := s.recentEvents(ctx, state.Before)
 	if err != nil {
