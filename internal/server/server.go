@@ -68,6 +68,18 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	// 6. Read
 	readDesc := "Read one to ten ordered references. Only complete records, missing statuses, or versioned tombstones are returned; bodies are never chunked."
 	addTool(s, "cortex_read", readDesc, false, nb.Read)
+
+	// 7. Todo Add
+	todoAddDesc := "Queue a deferred task or small action item in the project todo list so it is not lost across long conversations or context compaction."
+	addTool(s, "cortex_todo_add", todoAddDesc, false, nb.AddTodo)
+
+	// 8. Todo Done
+	todoDoneDesc := "Mark a queued todo item as done by ID."
+	addTool(s, "cortex_todo_done", todoDoneDesc, true, nb.DoneTodo)
+
+	// 9. Todo List
+	todoListDesc := "List queued todo items for the active project (defaults to 'open'; supports 'done' or 'all')."
+	addTool(s, "cortex_todo_list", todoListDesc, false, nb.ListTodos)
 }
 
 func addTool[In, Out any](s *mcp.Server, name, description string, destructive bool, run func(context.Context, In) (Out, error)) {

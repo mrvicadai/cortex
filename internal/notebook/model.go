@@ -39,11 +39,13 @@ type ContextInput struct {
 }
 
 type ContextResult struct {
-	Directory  string     `json:"directory"`
-	Context    *ReadItem  `json:"context"`
-	Recent     []ReadItem `json:"recent"`
-	HasMore    bool       `json:"has_more"`
-	NextCursor string     `json:"next_cursor,omitempty"`
+	Directory     string     `json:"directory"`
+	Context       *ReadItem  `json:"context"`
+	Recent        []ReadItem `json:"recent"`
+	OpenTodos     []Todo     `json:"open_todos,omitempty"`
+	OpenTodoCount int        `json:"open_todo_count,omitempty"`
+	HasMore       bool       `json:"has_more"`
+	NextCursor    string     `json:"next_cursor,omitempty"`
 }
 
 type ReadItem struct {

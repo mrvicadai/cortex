@@ -39,6 +39,17 @@ CREATE TABLE IF NOT EXISTS receipts (
  project_id TEXT NOT NULL REFERENCES projects(id), operation_id TEXT NOT NULL,
  request TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(project_id, operation_id)
 );
+CREATE TABLE IF NOT EXISTS todos (
+ seq INTEGER PRIMARY KEY AUTOINCREMENT,
+ project_id TEXT NOT NULL REFERENCES projects(id),
+ id TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('open','done')),
+ title TEXT NOT NULL,
+ notes TEXT NOT NULL DEFAULT '',
+ created_at TEXT NOT NULL,
+ updated_at TEXT NOT NULL,
+ UNIQUE(project_id, id)
+);
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 PRAGMA user_version = 1;
 `
