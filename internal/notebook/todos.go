@@ -28,8 +28,11 @@ type AddTodoInput struct {
 }
 
 type DoneTodoInput struct {
-	OperationID string `json:"operation_id" jsonschema:"Stable retry key; reuse with the identical request after response loss."`
-	ID          string `json:"id" jsonschema:"ID of the todo item to mark done."`
+	OperationID string     `json:"operation_id" jsonschema:"Stable retry key; reuse with the identical request after response loss."`
+	ID          string     `json:"id" jsonschema:"ID of the todo item to mark done."`
+	Outcome     string     `json:"outcome,omitempty" jsonschema:"Optional completion summary for the auto-appended milestone event (defaults to 'Completed todo: <title>')."`
+	Evidence    []Evidence `json:"evidence,omitempty" jsonschema:"Optional structured evidence pointers (e.g. git commit hash, test logs, PR link) attached to the auto-appended event."`
+	SkipEvent   bool       `json:"skip_event,omitempty" jsonschema:"Set true ONLY when dropping an obsolete, duplicate, or cancelled todo without doing real work. Leave false (default) when completing a task so the milestone event is recorded automatically."`
 }
 
 type ListTodosInput struct {
@@ -62,14 +65,14 @@ func (s *Store) AddTodo(ctx context.Context, in AddTodoInput) (Receipt, error) {
 	})
 }
 
-// DoneTodo marks an existing todo item as done.
+// DoneTodo marks an existing todo item as done and appends a milestone event unless skip_event is true.
 func (s *Store) DoneTodo(ctx context.Context, in DoneTodoInput) (Receipt, error) {
-	if !validName(in.ID, 128) {
-		return Receipt{}, invalid("id")
+	if err := validateDoneTodoInput(in); err != nil {
+		return Receipt{}, err
 	}
 	return s.mutate(ctx, s.project, in.OperationID, "todo_done", in, func(tx *sql.Tx) (Receipt, error) {
-		var existing string
-		err := tx.QueryRowContext(ctx, "SELECT id FROM todos WHERE project_id=? AND id=?", s.project, in.ID).Scan(&existing)
+		var prevStatus, title string
+		err := tx.QueryRowContext(ctx, "SELECT status, title FROM todos WHERE project_id=? AND id=?", s.project, in.ID).Scan(&prevStatus, &title)
 		if errors.Is(err, sql.ErrNoRows) {
 			return Receipt{}, &Fault{Code: "not_found", Message: "todo not found"}
 		}
@@ -77,13 +80,53 @@ func (s *Store) DoneTodo(ctx context.Context, in DoneTodoInput) (Receipt, error)
 			return Receipt{}, err
 		}
 		now := time.Now().UTC().Format(time.RFC3339Nano)
-		_, err = tx.ExecContext(
-			ctx,
-			"UPDATE todos SET status='done', updated_at=? WHERE project_id=? AND id=?",
-			now, s.project, in.ID,
-		)
-		return Receipt{Reference: Reference{Kind: "todo", ID: in.ID}, Retired: true, RecordedAt: now}, err
+		if _, err := tx.ExecContext(ctx, "UPDATE todos SET status='done', updated_at=? WHERE project_id=? AND id=?", now, s.project, in.ID); err != nil {
+			return Receipt{}, err
+		}
+		if !in.SkipEvent && prevStatus != "done" {
+			if err := appendTodoEvent(ctx, tx, s.project, now, title, in); err != nil {
+				return Receipt{}, err
+			}
+		}
+		return Receipt{Reference: Reference{Kind: "todo", ID: in.ID}, Retired: true, RecordedAt: now}, nil
 	})
+}
+
+func validateDoneTodoInput(in DoneTodoInput) error {
+	if !validName(in.ID, 128) {
+		return invalid("id")
+	}
+	if in.Outcome != "" {
+		if err := validateBody(in.Outcome); err != nil {
+			return err
+		}
+	}
+	if in.Evidence != nil {
+		return validateEvidence(in.Evidence)
+	}
+	return nil
+}
+
+func appendTodoEvent(ctx context.Context, tx *sql.Tx, project, now, title string, in DoneTodoInput) error {
+	body := in.Outcome
+	if body == "" {
+		body = "Completed todo: " + title
+	}
+	ev := in.Evidence
+	if ev == nil {
+		ev = []Evidence{}
+	}
+	event := Event{ID: token(), RecordedAt: now, Body: body, Evidence: ev}
+	document, err := encodeDocument(event)
+	if err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(
+		ctx,
+		"INSERT INTO records(project_id,kind,id,revision,document,search_text) VALUES (?,'event',?,'',?,?)",
+		project, event.ID, document, eventSearch(event),
+	)
+	return err
 }
 
 // ListTodos returns todos for the active project filtered by status ('open', 'done', or 'all').

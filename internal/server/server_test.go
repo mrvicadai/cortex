@@ -452,4 +452,19 @@ func TestServerTodoLifecycle(t *testing.T) {
 	if listOut.OpenCount != 0 || len(listOut.Items) != 0 {
 		t.Fatalf("expected 0 open todos after done, got count=%d len=%d", listOut.OpenCount, len(listOut.Items))
 	}
+
+	ctxAfterRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_context",
+		Arguments: map[string]any{},
+	})
+	if err != nil || ctxAfterRes.IsError {
+		t.Fatalf("cortex_context after done failed: err=%v, isError=%v", err, ctxAfterRes.IsError)
+	}
+	var ctxAfterOut notebook.ContextResult
+	if err := json.Unmarshal([]byte(extractText(ctxAfterRes)), &ctxAfterOut); err != nil {
+		t.Fatalf("unmarshal context after done failed: %v", err)
+	}
+	if len(ctxAfterOut.Recent) != 1 || ctxAfterOut.Recent[0].Event.Body != "Completed todo: Refactor retry loop" {
+		t.Fatalf("expected auto-appended completion event in recent, got %+v", ctxAfterOut.Recent)
+	}
 }
