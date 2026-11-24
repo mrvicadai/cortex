@@ -4,6 +4,18 @@ Scope: Merge-request guidance, with repository boundaries defined below.
 Merge-request and pull-request guidance applies across repositories, including non-interaction, non-destructive conflicts, and the required description shape.
 The notification-authorization restriction below also applies across repositories.
 
+## Irrefutable proof
+Produce irrefutable, directly observed proof that the changes work before opening or updating an MR/PR, following [testing guidance](testing.md).
+Verify runtime behavior with concrete reproduction, before/after, or end-to-end checks rather than relying on build, vet, or unverified assumptions.
+Include exact commands run, observed outcomes, and relevant links or outputs in the MR/PR description.
+Disclose any deferred or environment-gated validation explicitly in the MR/PR description rather than implying unperformed coverage.
+
+## Default PR/MR babysitting
+After opening or pushing to an MR/PR, default to babysitting it until CI is green and actionable feedback is resolved, unless the user explicitly asks to stop.
+Wait for CI/pipeline checks to reach a terminal state instead of declaring completion while checks are pending or queued.
+Inspect failing checks, merge conflicts, and review or bot comments, fix verified issues in code, push follow-up commits, and re-verify.
+Stop babysitting only when CI is green, all actionable findings are addressed, and only human approval or explicit user action remains, or when blocked on permissions or user input.
+
 ## Authorized user actions
 Do not comment on, approve, merge, close, or force-push an MR unless the user explicitly confirms that named action.
 
@@ -40,7 +52,7 @@ Preserve existing reviewers and honor any explicit replacement list.
 Specify the source branch, use supported noninteractive commands, read metadata back, project API responses, and use shell API calls where the MCP cannot return collection endpoints.
 
 ## Human approval gate
-Treat a green pipeline plus pending human approval as complete from the agent side.
+Treat a green pipeline with all actionable findings resolved and only human approval pending as complete from the agent side.
 Trust build and vet over unreliable worktree language-server diagnostics.
 
 ## Fast pipeline-covered iteration
@@ -54,6 +66,3 @@ Verify locally before push only when CI cannot answer the risk.
 ## Protect generated artifacts
 Never commit while code generation or build work is in flight.
 Inspect git status immediately before staging because interrupted generation can delete artifacts.
-
-## Deferred validation disclosure
-Put deferred validation in the MR description rather than implying unperformed coverage.

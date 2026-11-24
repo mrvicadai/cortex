@@ -53,7 +53,7 @@ var defaultTopicDefinitions = []struct {
 	{
 		id:      "mr-rules",
 		title:   "Merge Request / Pull Request Rules",
-		trigger: "Before opening or updating an MR or PR",
+		trigger: "Before opening, updating, or babysitting an MR or PR",
 		file:    "embedded/topics/mr-rules.md",
 	},
 	{

@@ -85,6 +85,14 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		t.Errorf("expected governance content to enforce 120 physical lines cap")
 	}
 
+	mr, err := store.GetTopics([]string{"mr-rules"})
+	if err != nil {
+		t.Fatalf("getting mr-rules topic: %v", err)
+	}
+	if !strings.Contains(mr[0].Content, "Irrefutable proof") || !strings.Contains(mr[0].Content, "Default PR/MR babysitting") {
+		t.Errorf("expected mr-rules content to include Irrefutable proof and Default PR/MR babysitting")
+	}
+
 	// Verify removed project-design topic is no longer registered
 	if _, err := store.GetTopics([]string{"project-design"}); err == nil {
 		t.Errorf("expected project-design topic to be removed")
