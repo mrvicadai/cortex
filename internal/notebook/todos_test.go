@@ -71,12 +71,46 @@ func TestTodoLifecycleAndContext(t *testing.T) {
 	requireNoError(t, err)
 	requireEqual(t, len(allList.Items), 2)
 
-	// Context reflects remaining open item
+	// Context reflects remaining open item and auto-appended completion event
 	ctxAfter, err := s.Context(ctx, ContextInput{})
 	requireNoError(t, err)
 	requireEqual(t, ctxAfter.OpenTodoCount, 1)
 	requireEqual(t, len(ctxAfter.OpenTodos), 1)
 	requireEqual(t, ctxAfter.OpenTodos[0].ID, second.ID)
+	requireEqual(t, len(ctxAfter.Recent), 1)
+	requireEqual(t, ctxAfter.Recent[0].Event.Body, "Completed todo: Fix nil pointer in auth middleware")
+
+	// Completing an already-done todo with a new operation_id does not duplicate the event
+	_, err = s.DoneTodo(ctx, DoneTodoInput{OperationID: "done-1-again", ID: first.ID})
+	requireNoError(t, err)
+	ctxNoDup, err := s.Context(ctx, ContextInput{})
+	requireNoError(t, err)
+	requireEqual(t, len(ctxNoDup.Recent), 1)
+
+	// Completing second item with SkipEvent: true does not append an event
+	_, err = s.DoneTodo(ctx, DoneTodoInput{OperationID: "done-2-skip", ID: second.ID, SkipEvent: true})
+	requireNoError(t, err)
+	ctxSkipped, err := s.Context(ctx, ContextInput{})
+	requireNoError(t, err)
+	requireEqual(t, ctxSkipped.OpenTodoCount, 0)
+	requireEqual(t, len(ctxSkipped.Recent), 1)
+
+	// Completing with custom outcome and evidence appends them to the event
+	third, err := s.AddTodo(ctx, AddTodoInput{OperationID: "todo-3", Title: "Investigate timeout"})
+	requireNoError(t, err)
+	_, err = s.DoneTodo(ctx, DoneTodoInput{
+		OperationID: "done-3",
+		ID:          third.ID,
+		Outcome:     "Fixed HTTP client timeout",
+		Evidence:    []Evidence{{Source: "git:abc123", VerifiedAt: "2026-11-23"}},
+	})
+	requireNoError(t, err)
+	ctxCustom, err := s.Context(ctx, ContextInput{})
+	requireNoError(t, err)
+	requireEqual(t, len(ctxCustom.Recent), 2)
+	requireEqual(t, ctxCustom.Recent[0].Event.Body, "Fixed HTTP client timeout")
+	requireEqual(t, len(ctxCustom.Recent[0].Event.Evidence), 1)
+	requireEqual(t, ctxCustom.Recent[0].Event.Evidence[0].Source, "git:abc123")
 }
 
 func TestTodoIdempotencyAndValidation(t *testing.T) {
@@ -111,4 +145,8 @@ func TestTodoIdempotencyAndValidation(t *testing.T) {
 	faultCode(t, err, "invalid_input")
 	_, err = s.DoneTodo(ctx, DoneTodoInput{OperationID: "missing-1", ID: "nonexistent"})
 	faultCode(t, err, "not_found")
+	_, err = s.DoneTodo(ctx, DoneTodoInput{OperationID: "bad-5", ID: r1.ID, Outcome: strings.Repeat("a", 4097)})
+	faultCode(t, err, "invalid_input")
+	_, err = s.DoneTodo(ctx, DoneTodoInput{OperationID: "bad-6", ID: r1.ID, Evidence: []Evidence{{Source: ""}}})
+	faultCode(t, err, "invalid_input")
 }

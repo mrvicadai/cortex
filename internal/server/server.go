@@ -74,7 +74,7 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	addTool(s, "cortex_todo_add", todoAddDesc, false, nb.AddTodo)
 
 	// 8. Todo Done
-	todoDoneDesc := "Mark a queued todo item as done by ID."
+	todoDoneDesc := "Mark a queued todo item as done by ID and automatically append a milestone event (using outcome/evidence if provided, or 'Completed todo: <title>'). Set skip_event: true ONLY when clearing an obsolete, duplicate, or cancelled todo without real work; leave skip_event false (default) for completed tasks."
 	addTool(s, "cortex_todo_done", todoDoneDesc, true, nb.DoneTodo)
 
 	// 9. Todo List
