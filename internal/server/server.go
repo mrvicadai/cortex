@@ -14,7 +14,7 @@ import (
 	"github.com/mrvicadai/cortex/internal/wire"
 )
 
-const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. At the start of every session, call cortex_bootstrap({}) (with zero arguments) to load core operating principles and topic triggers, and call cortex_context({}) to inspect recent events, past investigations, and project state. Use cortex_get_belief to load authoritative guidance before coding, testing, or opening merge requests. After major actions (including investigations, root cause discoveries, or verified commits), immediately record progress milestones with cortex_event_append."
+const serverInstructions = "Cortex provides unified agent context: normative operating beliefs and persistent episodic memory for AI coding agents. At the start of every session, call cortex_bootstrap({}) (with zero arguments) to load core operating principles and topic triggers, and call cortex_context({}) to inspect recent events, open_todos, past investigations, and project state. Use cortex_get_belief to load authoritative guidance before coding, testing, or opening merge requests. Use cortex_todo_add / cortex_todo_done / cortex_todo_list to track deferred tasks across long conversations. After major actions (including investigations, root cause discoveries, or verified commits), immediately record progress milestones with cortex_event_append."
 
 type ServerOptions struct {
 	Notebook *notebook.Store
