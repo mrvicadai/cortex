@@ -29,7 +29,7 @@ Never pass `extra_fields: ["*"]`; name only the required Datadog attributes.
 ## Verify telemetry facets
 **Required**
 Never invent a group-by column or facet.
-Source it from skill discovery, evidence linked by project facts under [project-state policy](../operating/project-state.md), or `search_*` with named `extra_fields`.
+Source it from skill discovery, evidence linked by project facts under [project-state policy](../foundational/project-state.md), or `search_*` with named `extra_fields`.
 An empty group column means stop and look up the name.
 
 ## Use qualified Datadog tool names

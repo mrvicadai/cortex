@@ -29,3 +29,4 @@ Supported fields:
 - `trigger`: (Required for new topics) Concrete action phrase describing when an agent should load this belief.
 - `title`: (Optional) Human-readable title. Defaults to the first `# Heading`.
 - `id`: (Optional) Explicit topic ID. Defaults to relative filepath without `.md`.
+- `related`: (Optional) Comma-separated topic IDs (e.g. `related: testing, mr-rules`) surfaced as `related_topics` in `cortex_get_belief`.

@@ -2,6 +2,7 @@ Scope: Verify claimed defects and completed dependencies before committing work.
 
 ## Verify claims before work
 
+Check `cortex_search(query: "<symptom or endpoint>", scope: "memory")` or `cortex_find` first to see if a prior session already disproved the premise or recorded the exact system-of-record query.
 Verify a claimed defect or completed dependency before starting implementation.
 Tickets, code, and merged Terraform are not systems of record.
 
@@ -37,4 +38,4 @@ Trace a request across all services by trace ID rather than searching one servic
 
 ## Record negative findings
 
-Record completed negative-premise checks in project memory under [project-state policy](project-state.md).
+Record completed negative-premise checks in project memory under [project-state policy](../foundational/project-state.md).
