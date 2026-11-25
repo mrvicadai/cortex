@@ -24,12 +24,13 @@ type FoundationalPrinciple struct {
 }
 
 type TopicMetadata struct {
-	ID      string `json:"topic_id"`
-	Title   string `json:"title"`
-	Trigger string `json:"trigger"`
-	Version string `json:"version"`
-	Origin  string `json:"origin"` // "packaged" | "user_override"
-	Content string `json:"content,omitempty"`
+	ID      string   `json:"topic_id"`
+	Title   string   `json:"title"`
+	Trigger string   `json:"trigger"`
+	Version string   `json:"version"`
+	Origin  string   `json:"origin"` // "packaged" | "user_override"
+	Related []string `json:"related_topics,omitempty"`
+	Content string   `json:"content,omitempty"`
 }
 
 var defaultTopicDefinitions = []struct {
@@ -37,48 +38,56 @@ var defaultTopicDefinitions = []struct {
 	title   string
 	trigger string
 	file    string
+	related []string
 }{
 	{
 		id:      "coding-standards",
 		title:   "Coding Standards",
 		trigger: "Before writing, refactoring, or fixing code",
 		file:    "embedded/topics/coding-standards.md",
+		related: []string{"testing"},
 	},
 	{
 		id:      "testing",
 		title:   "Testing & Verification",
 		trigger: "Before defining proof, running verification, or claiming completion",
 		file:    "embedded/topics/testing.md",
+		related: []string{"coding-standards"},
 	},
 	{
 		id:      "mr-rules",
 		title:   "Merge Request / Pull Request Rules",
 		trigger: "Before opening, updating, or babysitting an MR or PR",
 		file:    "embedded/topics/mr-rules.md",
+		related: []string{"testing", "git-stacking"},
 	},
 	{
 		id:      "git-stacking",
 		title:   "Git Stacking & Topology",
 		trigger: "Creating worktrees, branch topology, or stacking",
 		file:    "embedded/topics/git-stacking.md",
+		related: []string{"mr-rules"},
 	},
 	{
 		id:      "feasibility-audit",
 		title:   "Feasibility & Dependency Audit (Stage 1)",
 		trigger: "Stage 1 pre-RFC gate: auditing codebase, external APIs, data contracts, auth, and quotas before writing an RFC",
 		file:    "embedded/topics/feasibility-audit.md",
+		related: []string{"rfc-authoring", "premise-check"},
 	},
 	{
 		id:      "rfc-authoring",
 		title:   "RFC Authoring & Agent-Ready Blueprints (Stage 2)",
 		trigger: "Stage 2: writing or reviewing an agent-ready RFC (and ADRs) after Stage 1 audit clearance",
 		file:    "embedded/topics/rfc-authoring.md",
+		related: []string{"feasibility-audit", "project-planning"},
 	},
 	{
 		id:      "project-planning",
 		title:   "Project Planning & Task Breakdown (Stage 3)",
 		trigger: "Stage 3: slicing an accepted RFC (with empty Section 7) into PR-sized Jira tickets or tasks",
 		file:    "embedded/topics/project-planning.md",
+		related: []string{"rfc-authoring"},
 	},
 	{
 		id:      "walkthrough",
@@ -91,6 +100,7 @@ var defaultTopicDefinitions = []struct {
 		title:   "Datadog Query Craft & Telemetry",
 		trigger: "Querying Datadog telemetry, APM traces, error breakdowns, or logs",
 		file:    "embedded/topics/datadog-query-craft.md",
+		related: []string{"context-hygiene", "premise-check"},
 	},
 	{
 		id:      "premise-check",
@@ -109,6 +119,7 @@ var defaultTopicDefinitions = []struct {
 		title:   "Knowledge-Base Governance",
 		trigger: "Maintaining belief rules or performing self-improvement",
 		file:    "embedded/topics/governance.md",
+		related: []string{"custom-beliefs"},
 	},
 	{
 		id:      "custom-beliefs",
@@ -192,6 +203,7 @@ func NewStore(overrideDir string) (*Store, error) {
 			Trigger: t.trigger,
 			Version: PackageVersion,
 			Origin:  "packaged",
+			Related: t.related,
 			Content: strings.TrimSpace(string(data)),
 		}
 		s.topicOrder = append(s.topicOrder, t.id)
@@ -268,6 +280,7 @@ func (s *Store) registerOverride(meta TopicMetadata, content string, isNested bo
 	existing, found := s.topics[meta.ID]
 	title := meta.Title
 	trigger := meta.Trigger
+	related := meta.Related
 
 	if found {
 		if title == meta.ID {
@@ -275,6 +288,9 @@ func (s *Store) registerOverride(meta TopicMetadata, content string, isNested bo
 		}
 		if trigger == "Custom user override belief" {
 			trigger = existing.Trigger
+		}
+		if len(related) == 0 {
+			related = existing.Related
 		}
 	} else if !isNested {
 		s.topicOrder = append(s.topicOrder, meta.ID)
@@ -286,6 +302,7 @@ func (s *Store) registerOverride(meta TopicMetadata, content string, isNested bo
 		Trigger: trigger,
 		Version: PackageVersion + "-override",
 		Origin:  "user_override",
+		Related: related,
 		Content: content,
 	}
 }
@@ -381,9 +398,25 @@ func extractFrontmatter(raw string, base TopicMetadata) (TopicMetadata, string) 
 			base.Trigger = cleanYAMLValue(strings.TrimPrefix(line, "trigger:"))
 		} else if strings.HasPrefix(line, "when:") {
 			base.Trigger = cleanYAMLValue(strings.TrimPrefix(line, "when:"))
+		} else if strings.HasPrefix(line, "related:") {
+			base.Related = parseRelatedList(strings.TrimPrefix(line, "related:"))
 		}
 	}
 	return base, rest
+}
+
+func parseRelatedList(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.TrimPrefix(raw, "[")
+	raw = strings.TrimSuffix(raw, "]")
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		item := cleanYAMLValue(part)
+		if item != "" {
+			out = append(out, item)
+		}
+	}
+	return out
 }
 
 func cleanYAMLValue(val string) string {

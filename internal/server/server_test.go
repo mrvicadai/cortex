@@ -468,3 +468,30 @@ func TestServerTodoLifecycle(t *testing.T) {
 		t.Fatalf("expected auto-appended completion event in recent, got %+v", ctxAfterOut.Recent)
 	}
 }
+
+func TestServerGetBeliefRelatedTopics(t *testing.T) {
+	session, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_get_belief",
+		Arguments: map[string]any{"topics": []string{"coding-standards"}},
+	})
+	if err != nil || res.IsError {
+		t.Fatalf("cortex_get_belief failed: err=%v, isError=%v, text=%s", err, res.IsError, extractText(res))
+	}
+
+	var out struct {
+		TopicID       string   `json:"topic_id"`
+		RelatedTopics []string `json:"related_topics"`
+	}
+	if err := json.Unmarshal([]byte(extractText(res)), &out); err != nil {
+		t.Fatalf("unmarshal cortex_get_belief failed: %v", err)
+	}
+	if out.TopicID != "coding-standards" || len(out.RelatedTopics) != 1 || out.RelatedTopics[0] != "testing" {
+		t.Fatalf("expected coding-standards related_topics [testing], got %+v", out)
+	}
+}

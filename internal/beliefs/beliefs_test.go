@@ -387,3 +387,37 @@ func TestBootstrapAndSnippet(t *testing.T) {
 		t.Errorf("rendered table block unexpectedly small: %d", len(rendered))
 	}
 }
+
+func TestRelatedTopics(t *testing.T) {
+	store, err := beliefs.NewStore("")
+	if err != nil {
+		t.Fatalf("failed to create beliefs store: %v", err)
+	}
+
+	got, err := store.GetTopics([]string{"coding-standards"})
+	if err != nil {
+		t.Fatalf("GetTopics(coding-standards) failed: %v", err)
+	}
+	if len(got[0].Related) != 1 || got[0].Related[0] != "testing" {
+		t.Errorf("expected coding-standards related_topics [testing], got %v", got[0].Related)
+	}
+
+	tmpDir := t.TempDir()
+	customPath := filepath.Join(tmpDir, "deploy.md")
+	customMD := "---\ntrigger: Before deploying services\nrelated: [testing, mr-rules]\n---\n# Deploy\nRun smoke tests.\n"
+	if err := os.WriteFile(customPath, []byte(customMD), 0644); err != nil {
+		t.Fatalf("write custom belief: %v", err)
+	}
+
+	customStore, err := beliefs.NewStore(tmpDir)
+	if err != nil {
+		t.Fatalf("NewStore(tmpDir) failed: %v", err)
+	}
+	customGot, err := customStore.GetTopics([]string{"deploy"})
+	if err != nil {
+		t.Fatalf("GetTopics(deploy) failed: %v", err)
+	}
+	if len(customGot[0].Related) != 2 || customGot[0].Related[0] != "testing" || customGot[0].Related[1] != "mr-rules" {
+		t.Errorf("expected custom related_topics [testing mr-rules], got %v", customGot[0].Related)
+	}
+}

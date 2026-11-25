@@ -182,17 +182,19 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 
 		if len(topics) == 1 {
 			return struct {
-				TopicID string `json:"topic_id"`
-				Title   string `json:"title"`
-				Version string `json:"version"`
-				Origin  string `json:"origin"`
-				Content string `json:"content"`
+				TopicID       string   `json:"topic_id"`
+				Title         string   `json:"title"`
+				Version       string   `json:"version"`
+				Origin        string   `json:"origin"`
+				RelatedTopics []string `json:"related_topics,omitempty"`
+				Content       string   `json:"content"`
 			}{
-				TopicID: topics[0].ID,
-				Title:   topics[0].Title,
-				Version: topics[0].Version,
-				Origin:  topics[0].Origin,
-				Content: topics[0].Content,
+				TopicID:       topics[0].ID,
+				Title:         topics[0].Title,
+				Version:       topics[0].Version,
+				Origin:        topics[0].Origin,
+				RelatedTopics: topics[0].Related,
+				Content:       topics[0].Content,
 			}, nil
 		}
 
