@@ -54,7 +54,7 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	addTool(s, "cortex_fact_put", factPutDesc, true, nb.PutFact)
 
 	// 3. Fact Retire
-	factRetireDesc := "CAS-retire a fact, preserving an opaque tombstone revision. Cannot retire @context. Retry the identical request with the same operation_id."
+	factRetireDesc := "CAS-retire a fact, preserving an opaque tombstone revision, and automatically append a milestone event (using reason/evidence if provided, or 'Retired fact: <id>'). Set skip_event: true ONLY when retiring obsolete scratch or duplicate facts. Cannot retire @context."
 	addTool(s, "cortex_fact_retire", factRetireDesc, true, nb.RetireFact)
 
 	// 4. Event Append

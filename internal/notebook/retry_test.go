@@ -10,7 +10,7 @@ func TestRetireRetryAndContextProtection(t *testing.T) {
 	ctx := context.Background()
 	created, err := s.PutFact(ctx, factInput("old", "create-old"))
 	requireNoError(t, err)
-	in := RetireInput{"retire-old", "old", created.Revision}
+	in := RetireInput{OperationID: "retire-old", ID: "old", ExpectedRevision: created.Revision}
 	retired, err := s.RetireFact(ctx, in)
 	requireNoError(t, err)
 	if retry, err := s.RetireFact(ctx, in); err != nil || retry != retired {
@@ -20,7 +20,7 @@ func TestRetireRetryAndContextProtection(t *testing.T) {
 	if err != nil || item.Status != "retired" || item.Fact != nil || item.Revision != retired.Revision {
 		t.Fatalf("tombstone: %+v %v", item, err)
 	}
-	_, err = s.RetireFact(ctx, RetireInput{"bad", ContextID, retired.Revision})
+	_, err = s.RetireFact(ctx, RetireInput{OperationID: "bad", ID: ContextID, ExpectedRevision: retired.Revision})
 	faultCode(t, err, "context_required")
 	_, err = s.PutFact(ctx, factInput("another", "retire-old"))
 	faultCode(t, err, "operation_conflict")

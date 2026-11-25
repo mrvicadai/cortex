@@ -112,11 +112,14 @@ func appendTodoEvent(ctx context.Context, tx *sql.Tx, project, now, title string
 	if body == "" {
 		body = "Completed todo: " + title
 	}
-	ev := in.Evidence
-	if ev == nil {
-		ev = []Evidence{}
+	return appendMilestoneEvent(ctx, tx, project, now, body, in.Evidence)
+}
+
+func appendMilestoneEvent(ctx context.Context, tx *sql.Tx, project, now, body string, evidence []Evidence) error {
+	if evidence == nil {
+		evidence = []Evidence{}
 	}
-	event := Event{ID: token(), RecordedAt: now, Body: body, Evidence: ev}
+	event := Event{ID: token(), RecordedAt: now, Body: body, Evidence: evidence}
 	document, err := encodeDocument(event)
 	if err != nil {
 		return err

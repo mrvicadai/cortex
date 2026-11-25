@@ -32,7 +32,7 @@ func TestFactCASAndRetry(t *testing.T) {
 	if err != nil || updated.Revision == first.Revision {
 		t.Fatalf("update: %+v %v", updated, err)
 	}
-	retired, err := s.RetireFact(ctx, RetireInput{"retire", "locking", updated.Revision})
+	retired, err := s.RetireFact(ctx, RetireInput{OperationID: "retire", ID: "locking", ExpectedRevision: updated.Revision})
 	if err != nil || !retired.Retired {
 		t.Fatalf("retire: %+v %v", retired, err)
 	}
@@ -99,4 +99,49 @@ func TestConcurrentFactCreation(t *testing.T) {
 	if successes != 1 {
 		t.Fatalf("successful creates: %d", successes)
 	}
+}
+
+func TestRetireFactMilestoneEvent(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+
+	f1, err := s.PutFact(ctx, factInput("legacy-cache", "put-1"))
+	requireNoError(t, err)
+	_, err = s.RetireFact(ctx, RetireInput{
+		OperationID:      "retire-1",
+		ID:               "legacy-cache",
+		ExpectedRevision: f1.Revision,
+		Reason:           "Replaced Redis cache with SQLite WAL",
+		Evidence:         []Evidence{{Source: "git:abc1234", VerifiedAt: "2026-11-25"}},
+	})
+	requireNoError(t, err)
+
+	f2, err := s.PutFact(ctx, factInput("scratch-note", "put-2"))
+	requireNoError(t, err)
+	_, err = s.RetireFact(ctx, RetireInput{
+		OperationID:      "retire-2",
+		ID:               "scratch-note",
+		ExpectedRevision: f2.Revision,
+		SkipEvent:        true,
+	})
+	requireNoError(t, err)
+
+	got, err := s.Context(ctx, ContextInput{})
+	requireNoError(t, err)
+	if len(got.Recent) != 1 || got.Recent[0].Event.Body != "Replaced Redis cache with SQLite WAL" {
+		t.Fatalf("expected 1 milestone event for legacy-cache retirement, got %+v", got.Recent)
+	}
+	if len(got.Recent[0].Event.Evidence) != 1 || got.Recent[0].Event.Evidence[0].Source != "git:abc1234" {
+		t.Fatalf("expected evidence git:abc1234, got %+v", got.Recent[0].Event.Evidence)
+	}
+
+	f3, err := s.PutFact(ctx, factInput("bad-reason", "put-3"))
+	requireNoError(t, err)
+	_, err = s.RetireFact(ctx, RetireInput{
+		OperationID:      "retire-3",
+		ID:               "bad-reason",
+		ExpectedRevision: f3.Revision,
+		Reason:           strings.Repeat("x", 4097),
+	})
+	faultCode(t, err, "invalid_input")
 }
