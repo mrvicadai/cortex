@@ -21,7 +21,7 @@ Keep the change small enough to verify independently.
 
 ## Verify, checkpoint, and repeat
 
-Check the actual result against the success criteria under [testing guidance](testing.md) when applicable.
+Check the actual result against the success criteria under [testing guidance](../topics/testing.md) when applicable.
 Treat an attempted action, successful tool call, or unchanged assumption as insufficient proof of the requested outcome.
 
 **MANDATORY COMMIT CHECKPOINT**: You MUST commit verified changes (`git add` + `git commit`) as a focused checkpoint before deciding the next action or concluding the turn, unless explicitly instructed not to commit. A verified change that remains uncommitted is an incomplete action.

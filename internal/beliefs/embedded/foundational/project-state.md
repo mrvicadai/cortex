@@ -3,8 +3,9 @@
 Scope: Read and write project facts and events with Cortex Project Memory.
 
 - At session start, call `cortex_context({})` to inspect recent events, `open_todos`, and active `@context`, and confirm its notebook directory matches the intended project before saving.
+- If `cortex_context({})` returns `context: null` after initial repo exploration, seed `@context` via `cortex_fact_put` with verified build, lint, and test commands and repo topology so future sessions do not re-derive them.
 - Treat worktree notebooks as separate; reconnect to the intended project's Cortex server rather than saving unrelated state in the current notebook.
-- Find with `cortex_find`; read full records with `cortex_read`, following cursors.
+- Find with `cortex_find` (or `cortex_search` across both beliefs and project memory); read full records with `cortex_read`, following cursors.
 - **Distinguish Facts, Events, and To-Dos strictly:**
   - **Facts (`cortex_fact_put`)** are durable, present system invariants (*"what is currently true about this codebase"* — e.g. build commands, architecture topology, external service dependencies, `@context`). They use semantic concept IDs and can be updated via CAS or retired with tombstones. Never put transient actions, completed tasks, or historical log entries as facts.
   - **Events (`cortex_event_append`)** are chronological milestone outcomes (*"what just happened"* — e.g. MRs/PRs merged, bug investigations, test runs, CI results). Events are immutable, append-only, and automatically budget into the rolling context window.

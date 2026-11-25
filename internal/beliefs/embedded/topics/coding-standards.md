@@ -11,6 +11,7 @@ Do not pad or compress code to satisfy metrics.
 
 ## Repository conventions
 
+Check `@context` and `cortex_find(kind: "fact")` for recorded repository conventions before writing code.
 Repo conventions win over this guide; state a conflict instead of enforcing this guide.
 
 ## Proof guidance

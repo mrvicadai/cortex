@@ -54,7 +54,7 @@ func registerEpisodicTools(s *mcp.Server, nb *notebook.Store) {
 	addTool(s, "cortex_fact_put", factPutDesc, true, nb.PutFact)
 
 	// 3. Fact Retire
-	factRetireDesc := "CAS-retire a fact, preserving an opaque tombstone revision. Cannot retire @context. Retry the identical request with the same operation_id."
+	factRetireDesc := "CAS-retire a fact, preserving an opaque tombstone revision, and automatically append a milestone event (using reason/evidence if provided, or 'Retired fact: <id>'). Set skip_event: true ONLY when retiring obsolete scratch or duplicate facts. Cannot retire @context."
 	addTool(s, "cortex_fact_retire", factRetireDesc, true, nb.RetireFact)
 
 	// 4. Event Append
@@ -182,17 +182,19 @@ func registerBeliefTools(s *mcp.Server, b *beliefs.Store) {
 
 		if len(topics) == 1 {
 			return struct {
-				TopicID string `json:"topic_id"`
-				Title   string `json:"title"`
-				Version string `json:"version"`
-				Origin  string `json:"origin"`
-				Content string `json:"content"`
+				TopicID       string   `json:"topic_id"`
+				Title         string   `json:"title"`
+				Version       string   `json:"version"`
+				Origin        string   `json:"origin"`
+				RelatedTopics []string `json:"related_topics,omitempty"`
+				Content       string   `json:"content"`
 			}{
-				TopicID: topics[0].ID,
-				Title:   topics[0].Title,
-				Version: topics[0].Version,
-				Origin:  topics[0].Origin,
-				Content: topics[0].Content,
+				TopicID:       topics[0].ID,
+				Title:         topics[0].Title,
+				Version:       topics[0].Version,
+				Origin:        topics[0].Origin,
+				RelatedTopics: topics[0].Related,
+				Content:       topics[0].Content,
 			}, nil
 		}
 

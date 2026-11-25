@@ -7,11 +7,11 @@ Scope: Standalone walkthroughs of completed infrastructure or configuration chan
 Use this guidance when the user types `[WALKTHROUGH]`, asks to be walked through a change, onboarded to what was built, or given the whole picture of a project.
 This is a separate deliverable, not project state.
 It authorizes exactly one standalone Markdown file in the project; it does not authorize a second one or make the document maintained.
-Follow [project-state policy](../operating/project-state.md) for persistence.
+Follow [project-state policy](../foundational/project-state.md) for persistence.
 
 ## Evidence and authority
 
-Read real configuration; never write from recall.
+Query `cortex_context`, `cortex_find`, and `cortex_read` first to reconstruct shipped milestones, head SHAs, and recorded architectural decisions, then read real configuration; never write from recall.
 Open files and quote actual hostnames, bucket names, TTLs, and policy JSON.
 Name the spec of record and defer to it.
 The header must carry the date, head SHAs, a line that MR descriptions and tickets govern, and a point-in-time, not-maintained warning.

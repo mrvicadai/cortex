@@ -6,7 +6,7 @@ Include exact commands, observed outcomes, and relevant outputs or links in the 
 Disclose deferred or environment-gated validation explicitly rather than implying unperformed coverage.
 
 ## Default PR/MR babysitting
-After opening or pushing to an MR/PR, default to babysitting it until CI is green and actionable feedback is resolved, unless told to stop.
+After opening or pushing to an MR/PR, record the MR/PR URL via `cortex_event_append` (or `cortex_todo_done` with the URL in `evidence`), and default to babysitting it until CI is green and actionable feedback is resolved, unless told to stop.
 Wait for pending CI checks, inspect failures, conflicts, and review or bot comments, push verified fixes, and re-verify.
 Stop only when CI is green with only human approval or explicit user action remaining, or when blocked on permissions or user input.
 
@@ -31,6 +31,7 @@ Use small, validated Mermaid diagrams with plain labels for complex flows, depen
 Use descriptive names instead of opaque IDs like `I01` or `I02`, preserve inline bot summaries, and allow an optional trailing ticket link.
 
 ## Preserve MR metadata
+Check `cortex_find(kind: "fact", query: "mr")` for recorded repository MR conventions before setting labels or reviewers.
 Use low-impact labels unless impact is genuinely higher.
 Assign the documented owner, preserve existing reviewers, and honor any explicit replacement list.
 Only add reviewers, assignees, or @mentions when explicitly requested; creation, edits, and green CI do not authorize notification tags.

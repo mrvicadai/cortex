@@ -12,6 +12,7 @@ Do not treat build or vet as runtime proof.
 
 ## Exact project checks
 
+Check `@context` or `cortex_find(kind: "fact")` for recorded test, lint, and format commands before guessing.
 Run project typecheck, lint, and format where available, and run the specified exact test command rather than a guessed equivalent.
 
 ## Inversion

@@ -468,3 +468,87 @@ func TestServerTodoLifecycle(t *testing.T) {
 		t.Fatalf("expected auto-appended completion event in recent, got %+v", ctxAfterOut.Recent)
 	}
 }
+
+func TestServerGetBeliefRelatedTopics(t *testing.T) {
+	session, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_get_belief",
+		Arguments: map[string]any{"topics": []string{"coding-standards"}},
+	})
+	if err != nil || res.IsError {
+		t.Fatalf("cortex_get_belief failed: err=%v, isError=%v, text=%s", err, res.IsError, extractText(res))
+	}
+
+	var out struct {
+		TopicID       string   `json:"topic_id"`
+		RelatedTopics []string `json:"related_topics"`
+	}
+	if err := json.Unmarshal([]byte(extractText(res)), &out); err != nil {
+		t.Fatalf("unmarshal cortex_get_belief failed: %v", err)
+	}
+	if out.TopicID != "coding-standards" || len(out.RelatedTopics) != 1 || out.RelatedTopics[0] != "testing" {
+		t.Fatalf("expected coding-standards related_topics [testing], got %+v", out)
+	}
+}
+
+func TestServerFactRetireAutoEvent(t *testing.T) {
+	session, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	putRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_fact_put",
+		Arguments: map[string]any{
+			"operation_id":      "put-old-arch",
+			"expected_revision": "",
+			"fact": map[string]any{
+				"id":       "old-arch",
+				"title":    "Old Arch",
+				"body":     "Deprecated architecture.",
+				"topics":   []string{"arch"},
+				"evidence": []map[string]any{{"source": "README.md"}},
+			},
+		},
+	})
+	if err != nil || putRes.IsError {
+		t.Fatalf("cortex_fact_put failed: err=%v, text=%s", err, extractText(putRes))
+	}
+	var putReceipt notebook.Receipt
+	if err := json.Unmarshal([]byte(extractText(putRes)), &putReceipt); err != nil {
+		t.Fatalf("unmarshal put receipt: %v", err)
+	}
+
+	retireRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cortex_fact_retire",
+		Arguments: map[string]any{
+			"operation_id":      "retire-old-arch",
+			"id":                "old-arch",
+			"expected_revision": putReceipt.Revision,
+		},
+	})
+	if err != nil || retireRes.IsError {
+		t.Fatalf("cortex_fact_retire failed: err=%v, text=%s", err, extractText(retireRes))
+	}
+
+	ctxRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "cortex_context",
+		Arguments: map[string]any{},
+	})
+	if err != nil || ctxRes.IsError {
+		t.Fatalf("cortex_context failed: err=%v, text=%s", err, extractText(ctxRes))
+	}
+	var ctxOut notebook.ContextResult
+	if err := json.Unmarshal([]byte(extractText(ctxRes)), &ctxOut); err != nil {
+		t.Fatalf("unmarshal context: %v", err)
+	}
+	if len(ctxOut.Recent) != 1 || ctxOut.Recent[0].Event.Body != "Retired fact: old-arch" {
+		t.Fatalf("expected auto-appended retirement event, got %+v", ctxOut.Recent)
+	}
+}

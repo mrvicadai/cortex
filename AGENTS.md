@@ -5,7 +5,7 @@
 1. Call 'cortex_bootstrap({})' (with zero arguments) to load core operating principles (ODAV, Least-to-Most, Project Memory) and the active task-triggered topics router.
 2. Call 'cortex_context({})' to load recent milestone events, past investigations, and persistent @context.
 
-Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'.
+Before executing any task phase (e.g. coding, testing, git stacking, designing, opening MRs), you MUST consult the relevant topic(s) discovered from the bootstrap router using 'cortex_get_belief(topics: ["<topic-id>"])'. Use 'cortex_todo_add' / 'cortex_todo_done' / 'cortex_todo_list' to track deferred or multi-slice tasks across long conversations, and 'cortex_search' to query both beliefs and project memory.
 
 **DEFAULT TO COMMIT**: Every verified code change or completed slice MUST be committed immediately as a git checkpoint before proceeding or claiming completion, unless explicitly instructed otherwise.
 

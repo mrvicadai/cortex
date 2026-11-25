@@ -7,6 +7,7 @@ Apply this strategy as agent policy; no automated enforcement is provided.
 
 Identify the requested outcome, constraints, and unknowns before tackling the full problem.
 Break nontrivial work into the smallest useful subproblems with explicit dependencies and verifiable outcomes.
+For multi-slice tasks, queue remaining slices via `cortex_todo_add` (recording dependencies and file pointers in `notes`) so the plan survives context compaction.
 Order prerequisites before dependent work; prefer a simple foundational slice over a speculative end-to-end change.
 Keep trivial tasks direct rather than inventing unnecessary subproblems.
 
@@ -14,7 +15,7 @@ Keep trivial tasks direct rather than inventing unnecessary subproblems.
 
 Solve the simplest ready subproblem using the [ODAV loop](odav.md).
 Verify its result before using it as a premise or building a dependent slice on it.
-**MANDATORY SLICE COMMIT**: You MUST commit each independently verified slice as a focused checkpoint (`git add` + `git commit -m "<type>: <action>"`) and record the milestone outcome via `cortex_event_append` under [project-state](project-state.md) before beginning the next dependent subproblem, unless explicitly told not to commit. Do NOT accumulate multiple verified slices into a single end-of-task commit.
+**MANDATORY SLICE COMMIT**: You MUST commit each independently verified slice as a focused checkpoint (`git add` + `git commit -m "<type>: <action>"`) and record the milestone outcome (using `cortex_todo_done(id, outcome, evidence)` for queued slices or `cortex_event_append` under [project-state](project-state.md)) before beginning the next dependent subproblem, unless explicitly told not to commit. Do NOT accumulate multiple verified slices into a single end-of-task commit.
 Carry verified findings and reusable intermediate results into the next, more complex subproblem instead of re-deriving them.
 Revise the remaining decomposition when new evidence invalidates a dependency or assumption.
 Stop and resolve a failed prerequisite rather than building on an unverified result.

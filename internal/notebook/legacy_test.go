@@ -29,7 +29,7 @@ func TestLegacyNotebookKeepsRecordsReceiptsAndCursors(t *testing.T) {
 	requireNoError(t, err)
 	old, err := s.PutFact(ctx, factInput("old", "old"))
 	requireNoError(t, err)
-	retire := RetireInput{"retire", "old", old.Revision}
+	retire := RetireInput{OperationID: "retire", ID: "old", ExpectedRevision: old.Revision}
 	retired, err := s.RetireFact(ctx, retire)
 	requireNoError(t, err)
 	appendInput := AppendInput{OperationID: "event", Body: "Legacy outcome", Evidence: []Evidence{}}
