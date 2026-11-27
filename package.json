@@ -1,6 +1,6 @@
 {
   "name": "@mrvicadai/cortex",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "description": "Unified Agent Context Architecture: normative beliefs and persistent episodic memory for AI coding agents",
   "bin": {
