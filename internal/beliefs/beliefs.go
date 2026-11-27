@@ -69,6 +69,13 @@ var defaultTopicDefinitions = []struct {
 		related: []string{"mr-rules"},
 	},
 	{
+		id:      "autonomous-design",
+		title:   "Autonomous End-to-End Design (ADR -> RFC -> Tasks)",
+		trigger: "When instructed to run an autonomous end-to-end design from ADR through feasibility audit, RFC, and task planning",
+		file:    "embedded/topics/autonomous-design.md",
+		related: []string{"feasibility-audit", "rfc-authoring", "project-planning"},
+	},
+	{
 		id:      "feasibility-audit",
 		title:   "Feasibility & Dependency Audit (Stage 1)",
 		trigger: "Stage 1 pre-RFC gate: auditing codebase, external APIs, data contracts, auth, and quotas before writing an RFC",
