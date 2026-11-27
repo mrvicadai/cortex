@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 13 {
-		t.Fatalf("expected 13 default topics, got %d", len(topics))
+	if len(topics) != 14 {
+		t.Fatalf("expected 14 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -96,6 +96,21 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	// Verify removed project-design topic is no longer registered
 	if _, err := store.GetTopics([]string{"project-design"}); err == nil {
 		t.Errorf("expected project-design topic to be removed")
+	}
+
+	// Verify autonomous-design topic exists and encodes Stage 0 ADR, Via Negativa, and autonomous gate overrides
+	ad, err := store.GetTopics([]string{"autonomous-design"})
+	if err != nil {
+		t.Fatalf("getting autonomous-design topic: %v", err)
+	}
+	if ad[0].Title != "Autonomous End-to-End Design (ADR -> RFC -> Tasks)" {
+		t.Errorf("expected title 'Autonomous End-to-End Design (ADR -> RFC -> Tasks)', got %s", ad[0].Title)
+	}
+	if !strings.Contains(ad[0].Content, "Via Negativa Checklist") || !strings.Contains(ad[0].Content, "Accepted (Autonomous)") || !strings.Contains(ad[0].Content, "Stage 0: ADR") {
+		t.Errorf("expected autonomous-design content to include Via Negativa Checklist, Stage 0 ADR, and Accepted (Autonomous)")
+	}
+	if len(ad[0].Related) != 3 || ad[0].Related[0] != "feasibility-audit" || ad[0].Related[1] != "rfc-authoring" || ad[0].Related[2] != "project-planning" {
+		t.Errorf("expected autonomous-design related_topics [feasibility-audit rfc-authoring project-planning], got %v", ad[0].Related)
 	}
 }
 
@@ -239,8 +254,8 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 17 { // 13 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
-		t.Fatalf("expected 17 topics in root router, got %d", len(topics))
+	if len(topics) != 18 { // 14 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 18 topics in root router, got %d", len(topics))
 	}
 
 	// Verify root router contains domain routers, NOT raw nested sub-topics
