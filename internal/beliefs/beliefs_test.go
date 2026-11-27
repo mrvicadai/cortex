@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 15 {
-		t.Fatalf("expected 15 default topics, got %d", len(topics))
+	if len(topics) != 14 {
+		t.Fatalf("expected 14 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -106,17 +106,13 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if ad[0].Title != "Autonomous End-to-End Design (ADR -> RFC -> Tasks)" {
 		t.Errorf("expected title 'Autonomous End-to-End Design (ADR -> RFC -> Tasks)', got %s", ad[0].Title)
 	}
-	if !strings.Contains(ad[0].Content, "Via Negativa Checklist") || !strings.Contains(ad[0].Content, "Stage 0: ADR") || !strings.Contains(ad[0].Content, "adversarial critic check") {
-		t.Errorf("expected autonomous-design content to include Via Negativa Checklist, Stage 0 ADR, and adversarial critic check")
+	if !strings.Contains(ad[0].Content, "Via Negativa Checklist") || !strings.Contains(ad[0].Content, "Stage 0: ADR") || !strings.Contains(ad[0].Content, "adversarial critic check") || !strings.Contains(ad[0].Content, "Mid-implementation design addendum") {
+		t.Errorf("expected autonomous-design content to include Via Negativa Checklist, Stage 0 ADR, adversarial critic check, and Mid-implementation design addendum")
 	}
 
-	// Verify hitl-design-gates topic exists and encodes additive human pause points
-	hitl, err := store.GetTopics([]string{"hitl-design-gates"})
-	if err != nil {
-		t.Fatalf("getting hitl-design-gates topic: %v", err)
-	}
-	if !strings.Contains(hitl[0].Content, "Gate 1 (Post-Stage 1)") || !strings.Contains(hitl[0].Content, "Gate 2 (Post-Stage 2)") || !strings.Contains(hitl[0].Content, "Gate 3 (Post-Stage 3)") {
-		t.Errorf("expected hitl-design-gates content to include Gate 1, Gate 2, and Gate 3 pause points")
+	// Verify hitl-design-gates topic is removed
+	if _, err := store.GetTopics([]string{"hitl-design-gates"}); err == nil {
+		t.Errorf("expected hitl-design-gates topic to be removed")
 	}
 }
 
@@ -260,8 +256,8 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 19 { // 15 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
-		t.Fatalf("expected 19 topics in root router, got %d", len(topics))
+	if len(topics) != 18 { // 14 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 18 topics in root router, got %d", len(topics))
 	}
 
 	// Verify root router contains domain routers, NOT raw nested sub-topics

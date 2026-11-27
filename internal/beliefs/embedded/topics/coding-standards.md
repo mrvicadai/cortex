@@ -88,3 +88,7 @@ Prefer functions of 20–50 physical lines; shorter cohesive functions are fine 
 ## Cyclomatic complexity
 
 MUST keep cyclomatic complexity strictly less than 8 per function (maximum 7).
+
+## Design gaps
+
+If implementation uncovers a design gap affecting schemas, APIs, state, or cross-slice contracts, follow the addendum protocol in `autonomous-design` before coding a workaround.

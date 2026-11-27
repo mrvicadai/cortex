@@ -21,7 +21,7 @@ Scope: Slicing an accepted RFC (with empty Section 7) into actionable, PR-sized 
 
 ## Phase 3: Output schema & Gate 3 dry-run
 
-- **Gate 3 (Local-first vs. remote writes):** Output proposed tickets in Markdown (or a local JSON manifest) and optionally queue slices via `cortex_todo_add` without blocking; keep remote Jira/Linear issue-creation APIs gated unless explicitly authorized (or pause for all output when `hitl-design-gates` is active).
+- **Gate 3 (Local-first vs. remote writes):** Output proposed tickets in Markdown (or a local JSON manifest) and optionally queue slices via `cortex_todo_add` without blocking; keep remote Jira/Linear issue-creation APIs gated unless explicitly authorized.
 - **Repo-prefixed summary:** Format every ticket title as `[<repo>] <summary>` (using `<Verb> <Concrete Target> so that <Outcome>`) so repository ownership is clear at a glance.
 - **Traceability:** Embed direct links to the RFC and relevant `docs/adr/` files in ticket descriptions where applicable.
 
