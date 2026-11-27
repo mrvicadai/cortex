@@ -1,11 +1,11 @@
 # Autonomous end-to-end design (ADR -> Feasibility -> RFC -> Tasks)
 
-Scope: Orchestrating an autonomous end-to-end design from Stage 0 ADR through Stage 3 task planning when explicitly instructed, overriding the default HITL gates in `feasibility-audit`, `rfc-authoring`, and `project-planning`.
+Scope: Default end-to-end design pipeline (`ADR -> feasibility-audit -> rfc-authoring -> project-planning`) using Via Negativa and best-judgment gate clearance.
 
-## Precedence and mode activation
+## Pipeline & HITL overlay
 
-- Apply this workflow only when the user asks for an autonomous or end-to-end design; otherwise keep default HITL gates.
-- Call `cortex_get_belief(topics: ["feasibility-audit", "rfc-authoring", "project-planning"])` and enforce all their quality, schema, concreteness, and sizing rules except their human-approval hard stops.
+- Call `cortex_get_belief(topics: ["feasibility-audit", "rfc-authoring", "project-planning"])` and enforce all quality, schema, concreteness, and sizing rules across Stages 1–3.
+- Pause for human signoff only when the user explicitly requests checkpoints or `hitl-design-gates` is active.
 
 ## Stage 0: ADR and Via Negativa framing
 
@@ -15,12 +15,11 @@ Scope: Orchestrating an autonomous end-to-end design from Stage 0 ADR through St
   3. **Minimum reversible surface:** Avoid new infrastructure, dependencies, or feature flags unless simpler options are provably insufficient.
 - Compare at most 2–3 viable options, select the simplest reversible one using best judgment, and record the choice in `docs/adr/NNNN-title.md` (for hard-to-reverse choices) or a Stage 0 ADR summary.
 
-## Autonomous gate overrides (Stages 1–3)
+## Best-judgment tie-breaker & critic pass
 
-- **Stage 1 (`feasibility-audit`):** Self-clear Gate 1 when critical dependencies are `Verified` or have a verified *via negativa* workaround.
-- If a critical dependency is `Missing` or `Unverified`, loop back to Stage 0 to choose a verified simpler path; halt and escalate *only* on true external dead-ends (missing credentials/permissions, inaccessible private APIs, or contradictory goals).
-- **Stage 2 (`rfc-authoring`):** Link the Stage 0 ADR, record rejected additive options in Section 5 (`Alternatives Considered & Rejected`), resolve every Section 7 `Open Question` using best judgment and codebase evidence, and set `Status: Accepted (Autonomous)`.
-- **Stage 3 (`project-planning`):** Slice the accepted RFC into PR-sized tasks, self-clear Gate 3 for Markdown/JSON output (and queue slices via `cortex_todo_add` if execution is requested), and keep remote Jira/Linear writes gated unless explicitly authorized.
+- Resolve open design questions using this ordered rubric: **1. Via Negativa** (least new code/infra) -> **2. Reversibility** (easiest to change later) -> **3. Repo precedent** (matches existing patterns).
+- Before clearing Stage 2, verify every cited `file#Symbol` exists in the repo and run an adversarial critic check (what can be deleted or reused, and what fails under concurrency or partial failure).
+- Halt and escalate *only* on true external dead-ends: missing credentials/permissions, private undocumented APIs, or contradictory goals.
 
 ## Anti-rot Cortex checkpoints
 

@@ -24,13 +24,13 @@ Scope: Authoring or reviewing an agent-ready RFC (and optional ADRs) after Stage
 - **Vague (Rejected):** *"Update the webhooks table to track retries and add an admin replay endpoint."*
 - **Concrete (Required):** *"Add `attempt_count int DEFAULT 0` and `next_retry_at timestamptz` to `webhook_deliveries`; expose `POST /admin/v1/webhooks/:id/replay` returning `202` (`{"status":"retrying"}`) or `409` (`{"error":"not_dead_letter"}`)."*
 - **Mermaid diagrams (when helpful):** Use `stateDiagram-v2` when an entity has >= 3 states, and `sequenceDiagram` when >= 3 components interact across async/network boundaries (avoid `Note over` syntax). Never repeat diagram arrows in prose; list only invariants/exceptions.
-- **Gate 2 hard stop:** Human owner must resolve all Section 7 (`Open Questions`) and mark `Status: Accepted` before Stage 3 (`project-planning`).
+- **Gate 2 resolution:** Resolve all Section 7 (`Open Questions`) using the `autonomous-design` tie-breaker rubric (`[x]` with decision + rationale) and mark `Status: Accepted (Autonomous)` (or `Accepted`) before Stage 3 (`project-planning`), unless `hitl-design-gates` is active.
 
 ## RFC template (strict)
 
 ```markdown
 # RFC-[NNN]: [Short Feature or System Title]
-- **Status:** Draft | In Review | Accepted  |  **Owner:** @[name]  |  **Related ADRs:** [None | `docs/adr/000X-...md`]
+- **Status:** Draft | In Review | Accepted | Accepted (Autonomous)  |  **Owner:** @[name]  |  **Related ADRs:** [None | `docs/adr/000X-...md`]
 
 ## 1. Context & Problem
 [2–3 plain sentences explaining what is broken or missing, and why now.]
@@ -78,7 +78,7 @@ stateDiagram-v2
 | Downstream webhook hangs | 10s HTTP client timeout; treat timeout as retryable failure |
 | Duplicate replay click | Atomic `UPDATE ... WHERE status = 'dead_letter'`; second call returns `409` |
 
-## 5. Alternatives Considered & Rejected
+## 5. Alternatives Considered & Rejected (Via Negativa)
 | Option | Why Rejected |
 | :--- | :--- |
 | Kafka DLQ topic | Avoid operating a new broker for <500 events/min; Postgres partial index suffices (ADR-0014). |
@@ -90,7 +90,7 @@ stateDiagram-v2
   2. Dispatcher retry/DLQ state machine verified with mock HTTP server tests.
   3. Admin replay endpoint + metrics verified end-to-end.
 
-## 7. Open Questions (Must Be Empty Before Stage 3)
+## 7. Open Questions (Must Be Resolved Before Stage 3)
 - [x] Retry `408`/`429` only; send other `4xx` to `dead_letter` -> **Decision:** Locked.
-- [ ] [Open question] -> **Owner:** @[name] (Resolve before running `project-planning`)
+- [x] [Resolved question] -> **Decision:** [Chosen option & rationale] (Leave `[ ]` only when `hitl-design-gates` is active)
 ```

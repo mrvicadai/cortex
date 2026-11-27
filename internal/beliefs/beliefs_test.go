@@ -16,8 +16,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 14 {
-		t.Fatalf("expected 14 default topics, got %d", len(topics))
+	if len(topics) != 15 {
+		t.Fatalf("expected 15 default topics, got %d", len(topics))
 	}
 
 	for _, topic := range topics {
@@ -41,7 +41,7 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		t.Errorf("expected custom-beliefs content to mention YAML frontmatter")
 	}
 
-	// Verify feasibility-audit topic exists and encodes Stage 1 Dependency Matrix and Gate 1 hard stop
+	// Verify feasibility-audit topic exists and encodes Stage 1 Dependency Matrix and Gate 1 clearance
 	fa, err := store.GetTopics([]string{"feasibility-audit"})
 	if err != nil {
 		t.Fatalf("getting feasibility-audit topic: %v", err)
@@ -49,8 +49,8 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if fa[0].Title != "Feasibility & Dependency Audit (Stage 1)" {
 		t.Errorf("expected title 'Feasibility & Dependency Audit (Stage 1)', got %s", fa[0].Title)
 	}
-	if !strings.Contains(fa[0].Content, "Dependency & Capability Matrix") || !strings.Contains(fa[0].Content, "Gate 1 hard stop") || !strings.Contains(fa[0].Content, "cortex_find") {
-		t.Errorf("expected feasibility-audit content to include matrix, Gate 1 hard stop, and Cortex lookup")
+	if !strings.Contains(fa[0].Content, "Dependency & Capability Matrix") || !strings.Contains(fa[0].Content, "Gate 1 clearance") || !strings.Contains(fa[0].Content, "cortex_find") {
+		t.Errorf("expected feasibility-audit content to include matrix, Gate 1 clearance, and Cortex lookup")
 	}
 
 	// Verify project-planning topic exists and encodes Stage 3 gates and sizing rules
@@ -61,7 +61,7 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if pp[0].Title != "Project Planning & Task Breakdown (Stage 3)" {
 		t.Errorf("expected title 'Project Planning & Task Breakdown (Stage 3)', got %s", pp[0].Title)
 	}
-	if !strings.Contains(pp[0].Content, "One-Sentence Diff Test") || !strings.Contains(pp[0].Content, "Gate 2 hard stop") || !strings.Contains(pp[0].Content, "Gate 3") {
+	if !strings.Contains(pp[0].Content, "One-Sentence Diff Test") || !strings.Contains(pp[0].Content, "Gate 2 prerequisite") || !strings.Contains(pp[0].Content, "Gate 3") {
 		t.Errorf("expected project-planning content to include sizing gates and Gate 2/3 rules")
 	}
 
@@ -73,7 +73,7 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if rfc[0].Title != "RFC Authoring & Agent-Ready Blueprints (Stage 2)" {
 		t.Errorf("expected title 'RFC Authoring & Agent-Ready Blueprints (Stage 2)', got %s", rfc[0].Title)
 	}
-	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "RFC vs. ADR policy") || !strings.Contains(rfc[0].Content, "stateDiagram-v2") || !strings.Contains(rfc[0].Content, "Failure Modes & Concurrency") || !strings.Contains(rfc[0].Content, "Must Be Empty Before Stage 3") || !strings.Contains(rfc[0].Content, "Description (Why + What) & Example") || !strings.Contains(rfc[0].Content, "| Request | Response |") {
+	if !strings.Contains(rfc[0].Content, "Concreteness & readability rules") || !strings.Contains(rfc[0].Content, "RFC vs. ADR policy") || !strings.Contains(rfc[0].Content, "stateDiagram-v2") || !strings.Contains(rfc[0].Content, "Failure Modes & Concurrency") || !strings.Contains(rfc[0].Content, "Must Be Resolved Before Stage 3") || !strings.Contains(rfc[0].Content, "Description (Why + What) & Example") || !strings.Contains(rfc[0].Content, "| Request | Response |") {
 		t.Errorf("expected rfc-authoring content to include ADR policy, readability rules, Mermaid guidance, Failure Modes, Gate 2, and explicit Description/Request/Response columns")
 	}
 
@@ -98,7 +98,7 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 		t.Errorf("expected project-design topic to be removed")
 	}
 
-	// Verify autonomous-design topic exists and encodes Stage 0 ADR, Via Negativa, and autonomous gate overrides
+	// Verify autonomous-design topic exists and encodes Stage 0 ADR, Via Negativa, and tie-breaker rubric
 	ad, err := store.GetTopics([]string{"autonomous-design"})
 	if err != nil {
 		t.Fatalf("getting autonomous-design topic: %v", err)
@@ -106,11 +106,17 @@ func TestEmbeddedBeliefsLoad(t *testing.T) {
 	if ad[0].Title != "Autonomous End-to-End Design (ADR -> RFC -> Tasks)" {
 		t.Errorf("expected title 'Autonomous End-to-End Design (ADR -> RFC -> Tasks)', got %s", ad[0].Title)
 	}
-	if !strings.Contains(ad[0].Content, "Via Negativa Checklist") || !strings.Contains(ad[0].Content, "Accepted (Autonomous)") || !strings.Contains(ad[0].Content, "Stage 0: ADR") {
-		t.Errorf("expected autonomous-design content to include Via Negativa Checklist, Stage 0 ADR, and Accepted (Autonomous)")
+	if !strings.Contains(ad[0].Content, "Via Negativa Checklist") || !strings.Contains(ad[0].Content, "Stage 0: ADR") || !strings.Contains(ad[0].Content, "adversarial critic check") {
+		t.Errorf("expected autonomous-design content to include Via Negativa Checklist, Stage 0 ADR, and adversarial critic check")
 	}
-	if len(ad[0].Related) != 3 || ad[0].Related[0] != "feasibility-audit" || ad[0].Related[1] != "rfc-authoring" || ad[0].Related[2] != "project-planning" {
-		t.Errorf("expected autonomous-design related_topics [feasibility-audit rfc-authoring project-planning], got %v", ad[0].Related)
+
+	// Verify hitl-design-gates topic exists and encodes additive human pause points
+	hitl, err := store.GetTopics([]string{"hitl-design-gates"})
+	if err != nil {
+		t.Fatalf("getting hitl-design-gates topic: %v", err)
+	}
+	if !strings.Contains(hitl[0].Content, "Gate 1 (Post-Stage 1)") || !strings.Contains(hitl[0].Content, "Gate 2 (Post-Stage 2)") || !strings.Contains(hitl[0].Content, "Gate 3 (Post-Stage 3)") {
+		t.Errorf("expected hitl-design-gates content to include Gate 1, Gate 2, and Gate 3 pause points")
 	}
 }
 
@@ -254,8 +260,8 @@ func TestUserOverrides(t *testing.T) {
 	}
 
 	topics := store.ListTopics("")
-	if len(topics) != 18 { // 14 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
-		t.Fatalf("expected 18 topics in root router, got %d", len(topics))
+	if len(topics) != 19 { // 15 original + 1 custom-cloud + 1 payments-compliance + 2 synthesized routers (security, infra)
+		t.Fatalf("expected 19 topics in root router, got %d", len(topics))
 	}
 
 	// Verify root router contains domain routers, NOT raw nested sub-topics
