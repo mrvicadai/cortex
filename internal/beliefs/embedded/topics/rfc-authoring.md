@@ -24,7 +24,7 @@ Scope: Authoring or reviewing an agent-ready RFC (and optional ADRs) after Stage
 - **Vague (Rejected):** *"Update the webhooks table to track retries and add an admin replay endpoint."*
 - **Concrete (Required):** *"Add `attempt_count int DEFAULT 0` and `next_retry_at timestamptz` to `webhook_deliveries`; expose `POST /admin/v1/webhooks/:id/replay` returning `202` (`{"status":"retrying"}`) or `409` (`{"error":"not_dead_letter"}`)."*
 - **Mermaid diagrams (when helpful):** Use `stateDiagram-v2` when an entity has >= 3 states, and `sequenceDiagram` when >= 3 components interact across async/network boundaries (avoid `Note over` syntax). Never repeat diagram arrows in prose; list only invariants/exceptions.
-- **Gate 2 resolution:** Resolve all Section 7 (`Open Questions`) using the `autonomous-design` tie-breaker rubric (`[x]` with decision + rationale) and mark `Status: Accepted (Autonomous)` (or `Accepted`) before Stage 3 (`project-planning`), unless `hitl-design-gates` is active.
+- **Gate 2 resolution:** Resolve all Section 7 (`Open Questions`) using the `autonomous-design` tie-breaker rubric (`[x]` with decision + rationale) and mark `Status: Accepted (Autonomous)` (or `Accepted`) before Stage 3 (`project-planning`).
 
 ## RFC template (strict)
 
@@ -92,5 +92,5 @@ stateDiagram-v2
 
 ## 7. Open Questions (Must Be Resolved Before Stage 3)
 - [x] Retry `408`/`429` only; send other `4xx` to `dead_letter` -> **Decision:** Locked.
-- [x] [Resolved question] -> **Decision:** [Chosen option & rationale] (Leave `[ ]` only when `hitl-design-gates` is active)
+- [x] [Resolved question] -> **Decision:** [Chosen option & rationale]
 ```

@@ -32,4 +32,3 @@ Produce this matrix before requesting Gate 1 clearance:
 
 - Exhaust static proof (repo code, tests, schemas, `cortex_find`, and official docs) before marking any dependency `Unverified`.
 - If a critical dependency is `Missing` or `Unverified`, pivot back to Stage 0 (`autonomous-design`) via *Via Negativa* or bound the unknown with a safe fallback; escalate *only* on true external dead-ends (missing credentials/permissions, private undocumented APIs, or contradictory goals).
-- Pause for human Gate 1 approval before Stage 2 (`rfc-authoring`) only when `hitl-design-gates` is active.

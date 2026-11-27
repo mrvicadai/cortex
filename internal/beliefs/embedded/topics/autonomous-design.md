@@ -2,10 +2,9 @@
 
 Scope: Default end-to-end design pipeline (`ADR -> feasibility-audit -> rfc-authoring -> project-planning`) using Via Negativa and best-judgment gate clearance.
 
-## Pipeline & HITL overlay
+## Pipeline activation
 
 - Call `cortex_get_belief(topics: ["feasibility-audit", "rfc-authoring", "project-planning"])` and enforce all quality, schema, concreteness, and sizing rules across Stages 1–3.
-- Pause for human signoff only when the user explicitly requests checkpoints or `hitl-design-gates` is active.
 
 ## Stage 0: ADR and Via Negativa framing
 
@@ -26,3 +25,9 @@ Scope: Default end-to-end design pipeline (`ADR -> feasibility-audit -> rfc-auth
 - Persist durable architectural decisions and verified constraints via `cortex_fact_put` at Stage 0 and Stage 1.
 - Append a concise milestone via `cortex_event_append` at each stage transition (`Stage 0 ADR locked`, `Stage 1 Feasibility cleared`, `Stage 2 RFC accepted`, `Stage 3 Tasks sliced`).
 - Ground each stage from the prior stage's structured artifact and targeted `cortex_find` / `cortex_read` calls rather than raw exploration logs.
+
+## Mid-implementation design addendum
+
+- Classify implementation surprises into three buckets: fix trivial internal details directly in code; author a **Design Addendum** for schema, API, state, or cross-slice contract gaps; pivot to Stage 0 only if the core ADR premise is invalidated.
+- Apply the **Via Negativa Checklist** and **Best-judgment tie-breaker** to pick the smallest reversible fix, then append `## Addendum: <Short Title>` to the active RFC (or ADR) with only the delta (gap + `file#Symbol` evidence, decision, contract delta, affected slices).
+- Update affected `cortex_todo_*` slices (or add new ones via `cortex_todo_add`), persist changed invariants via `cortex_fact_put`, log `Addendum: <summary>` via `cortex_event_append`, and resume implementation immediately.
