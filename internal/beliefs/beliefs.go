@@ -71,9 +71,16 @@ var defaultTopicDefinitions = []struct {
 	{
 		id:      "autonomous-design",
 		title:   "Autonomous End-to-End Design (ADR -> RFC -> Tasks)",
-		trigger: "When instructed to run an autonomous end-to-end design from ADR through feasibility audit, RFC, and task planning",
+		trigger: "Stage 0 & default end-to-end design pipeline: ADR framing, Via Negativa, best-judgment gate clearance, and anti-rot checkpoints",
 		file:    "embedded/topics/autonomous-design.md",
-		related: []string{"feasibility-audit", "rfc-authoring", "project-planning"},
+		related: []string{"feasibility-audit", "rfc-authoring", "project-planning", "hitl-design-gates"},
+	},
+	{
+		id:      "hitl-design-gates",
+		title:   "Human-in-the-Loop Design Gates (HITL Overlay)",
+		trigger: "When the user explicitly requests human signoff, review checkpoints, or /plan approval at design gates",
+		file:    "embedded/topics/hitl-design-gates.md",
+		related: []string{"autonomous-design", "feasibility-audit", "rfc-authoring", "project-planning"},
 	},
 	{
 		id:      "feasibility-audit",

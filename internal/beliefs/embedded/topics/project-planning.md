@@ -4,7 +4,7 @@ Scope: Slicing an accepted RFC (with empty Section 7) into actionable, PR-sized 
 
 ## Gate 2 prerequisite & fresh-context Cortex retrieval
 
-- **Gate 2 hard stop:** Refuse to slice if RFC Section 7 (`Open Questions`) has unresolved items or `Status != Accepted`.
+- **Gate 2 prerequisite:** Refuse to slice if RFC Section 7 (`Open Questions`) has unresolved `[ ]` items or `Status` is neither `Accepted` nor `Accepted (Autonomous)`.
 - **Fresh-context grounding (anti-rot):** Do not carry stale Stage 1 exploration logs into Stage 3. Ground from the accepted RFC + targeted `cortex_find(kind: "fact", query: "<domain>")` / `cortex_read` calls only.
 - Inspect the repo only to verify exact `file#Symbol` pointers not already covered by the RFC or Cortex facts.
 - Never dump raw file contents, scratch notes, or ticket lists into Facts; retire any temporary planning facts via `cortex_fact_retire` once finalized.
@@ -21,7 +21,7 @@ Scope: Slicing an accepted RFC (with empty Section 7) into actionable, PR-sized 
 
 ## Phase 3: Output schema & Gate 3 dry-run
 
-- **Gate 3 (Dry-run before Jira writes):** Output proposed tickets in Markdown (or a local JSON manifest) for human review before invoking any remote Jira issue-creation APIs.
+- **Gate 3 (Local-first vs. remote writes):** Output proposed tickets in Markdown (or a local JSON manifest) and optionally queue slices via `cortex_todo_add` without blocking; keep remote Jira/Linear issue-creation APIs gated unless explicitly authorized (or pause for all output when `hitl-design-gates` is active).
 - **Repo-prefixed summary:** Format every ticket title as `[<repo>] <summary>` (using `<Verb> <Concrete Target> so that <Outcome>`) so repository ownership is clear at a glance.
 - **Traceability:** Embed direct links to the RFC and relevant `docs/adr/` files in ticket descriptions where applicable.
 
