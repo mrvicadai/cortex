@@ -21,7 +21,7 @@ func legacyStore(t *testing.T, path string) *Store {
 }
 
 func TestLegacyNotebookKeepsRecordsReceiptsAndCursors(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	s := legacyStore(t, path)
 	ctx := context.Background()
 	put := factInput(ContextID, "context")
@@ -68,7 +68,7 @@ func TestLegacyNotebookKeepsRecordsReceiptsAndCursors(t *testing.T) {
 func TestLaunchDirectoryDoesNotInheritLegacyAncestor(t *testing.T) {
 	root := t.TempDir()
 	chdir(t, root)
-	path := filepath.Join(root, "fieldnotes.sqlite")
+	path := filepath.Join(root, "cortex.sqlite")
 	parent := legacyStore(t, path)
 	_, err := parent.PutFact(context.Background(), factInput("private", "create"))
 	requireNoError(t, err)

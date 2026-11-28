@@ -8,7 +8,7 @@ import (
 )
 
 func TestContextCursorPersistence(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	s, err := Open(path)
 	requireNoError(t, err)
 	t.Cleanup(func() { s.Close() })

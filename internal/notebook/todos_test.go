@@ -8,7 +8,7 @@ import (
 )
 
 func TestTodoLifecycleAndContext(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	s, err := Open(path)
 	requireNoError(t, err)
 	t.Cleanup(func() { s.Close() })
@@ -114,7 +114,7 @@ func TestTodoLifecycleAndContext(t *testing.T) {
 }
 
 func TestTodoIdempotencyAndValidation(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	s, err := Open(path)
 	requireNoError(t, err)
 	t.Cleanup(func() { s.Close() })

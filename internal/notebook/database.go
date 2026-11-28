@@ -17,12 +17,12 @@ func identifyDatabase(tx *sql.Tx) error {
 	}
 	if application == applicationID {
 		if version != 1 {
-			return fmt.Errorf("unsupported Fieldnotes schema version")
+			return fmt.Errorf("unsupported Cortex notebook schema version")
 		}
 		return nil
 	}
 	if application != 0 || version != 0 {
-		return fmt.Errorf("not a Fieldnotes database; choose a new separate path")
+		return fmt.Errorf("not a Cortex notebook database; choose a new separate path")
 	}
 	return initializeEmptyDatabase(tx)
 }
