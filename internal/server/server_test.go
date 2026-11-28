@@ -111,8 +111,6 @@ func TestServerToolList(t *testing.T) {
 
 	// Verify retired legacy aliases do NOT exist
 	unwantedAliases := []string{
-		"fieldnotes_context", "fieldnotes_fact_put", "fieldnotes_fact_retire",
-		"fieldnotes_event_append", "fieldnotes_find", "fieldnotes_read",
 		"beliefs_bootstrap", "beliefs_get", "beliefs_search",
 		"cortex_list_beliefs", "cortex_beliefs_bootstrap", "cortex_beliefs_get",
 	}

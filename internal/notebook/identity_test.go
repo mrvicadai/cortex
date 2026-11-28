@@ -10,7 +10,7 @@ import (
 
 func openTest(t *testing.T) *Store {
 	t.Helper()
-	s, err := Open(filepath.Join(t.TempDir(), "fieldnotes.sqlite"))
+	s, err := Open(filepath.Join(t.TempDir(), "cortex.sqlite"))
 	if err != nil {
 		t.Fatal(err)
 	}

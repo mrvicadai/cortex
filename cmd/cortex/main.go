@@ -123,7 +123,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	flags := flag.NewFlagSet("cortex", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 
-	dbFlag := flags.String("db", "", "SQLite database path (default: .cortex/cortex.sqlite or .fieldnotes/fieldnotes.sqlite)")
+	dbFlag := flags.String("db", "", "SQLite database path (default: .cortex/cortex.sqlite)")
 	overridesFlag := flags.String("additional-beliefs", "", "Directory containing custom markdown beliefs")
 	vFlag := flags.Bool("v", false, "Show version")
 	versionFlag := flags.Bool("version", false, "Show version")
@@ -179,11 +179,6 @@ func resolveDatabasePath(custom string) (string, error) {
 			return "", err
 		}
 		return abs, nil
-	}
-
-	// Automatic fallback: check if .fieldnotes/fieldnotes.sqlite exists
-	if fi, err := os.Stat(filepath.Join(".fieldnotes", "fieldnotes.sqlite")); err == nil && !fi.IsDir() {
-		return filepath.Abs(filepath.Join(".fieldnotes", "fieldnotes.sqlite"))
 	}
 
 	// Default to .cortex/cortex.sqlite in current directory

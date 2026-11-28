@@ -12,7 +12,7 @@
 Agentic workflows require two fundamentally different types of context to operate effectively:
 
 1. **Normative Context (Beliefs):** Cross-cutting principles, coding standards, heuristics, and behavioral guidelines (*"how the agent should think and behave"*). Packaged as embedded SemVer markdown rules with user-override capability (`--additional-beliefs`), discovered progressively to prevent context bloat.
-2. **Episodic Context (Fieldnotes):** Empirical project facts, decisions, blockers, and milestone progress updates (*"what is true about this specific project right now"*). Managed in persistent pure-Go SQLite with CAS optimistic concurrency (`expected_revision`), idempotency receipts (`operation_id`), structured evidence pointers, and strict 8 KiB context budgeting.
+2. **Episodic Context (Project Memory):** Empirical project facts, decisions, blockers, and milestone progress updates (*"what is true about this specific project right now"*). Managed in persistent pure-Go SQLite with CAS optimistic concurrency (`expected_revision`), idempotency receipts (`operation_id`), structured evidence pointers, and strict 8 KiB context budgeting.
 
 **Cortex** unifies both systems into a single MCP package, eliminating dual-server configuration, fragmented queries, and tool confusion.
 
@@ -163,8 +163,6 @@ export CORTEX_ADDITIONAL_BELIEFS=~/additional_beliefs
 
 Cortex stores episodic data in pure-Go SQLite (`modernc.org/sqlite` in WAL mode):
 - Default location: `.cortex/cortex.sqlite` (or `~/.cortex/cortex.sqlite`).
-- If an existing `.fieldnotes/fieldnotes.sqlite` file is present in the workspace, Cortex automatically connects to it with zero configuration!
-- Fully binary compatible with existing Fieldnotes database files (`application_id = 0x464e4f54`).
 
 ---
 

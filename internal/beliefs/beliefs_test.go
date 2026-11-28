@@ -382,7 +382,7 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	if !strings.Contains(snippet, "cortex_context({})") {
 		t.Errorf("snippet missing 'cortex_context({})' directive")
 	}
-	if strings.Contains(snippet, "beliefs_bootstrap") || strings.Contains(snippet, "fieldnotes_") {
+	if strings.Contains(snippet, "beliefs_bootstrap") {
 		t.Errorf("snippet unexpectedly contains legacy aliases")
 	}
 
@@ -394,9 +394,6 @@ func TestBootstrapAndSnippet(t *testing.T) {
 	}
 	if !strings.Contains(bootstrap, "MANDATORY MILESTONE LOGGING") {
 		t.Errorf("bootstrap missing 'MANDATORY MILESTONE LOGGING' in project-state")
-	}
-	if strings.Contains(bootstrap, "fieldnotes_") {
-		t.Errorf("bootstrap unexpectedly contains legacy 'fieldnotes_' references")
 	}
 
 	rendered := store.GetRenderedTableBlock()

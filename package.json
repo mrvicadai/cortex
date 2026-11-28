@@ -26,7 +26,6 @@
     "ai-agent",
     "cortex",
     "beliefs",
-    "fieldnotes",
     "episodic-memory",
     "sqlite"
   ],

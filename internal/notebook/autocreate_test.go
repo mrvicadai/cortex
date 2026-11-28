@@ -26,7 +26,7 @@ func TestNotebookInitializesOnOpen(t *testing.T) {
 }
 
 func TestConcurrentProjectInitialization(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	stores := make([]*Store, 2)
 	errors := make([]error, 2)
 	var wg sync.WaitGroup
@@ -49,7 +49,7 @@ func TestConcurrentProjectInitialization(t *testing.T) {
 }
 
 func TestContextDirectoryPersists(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "fieldnotes.sqlite")
+	path := filepath.Join(t.TempDir(), "cortex.sqlite")
 	s, err := Open(path)
 	requireNoError(t, err)
 	first, err := s.Context(context.Background(), ContextInput{})

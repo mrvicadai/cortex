@@ -244,7 +244,7 @@ func registerCrossCuttingTools(s *mcp.Server, nb *notebook.Store, b *beliefs.Sto
 			result["beliefs"] = beliefMatches.Matches
 		}
 
-		if (scope == "all" || scope == "memory" || scope == "fieldnotes") && nb != nil {
+		if (scope == "all" || scope == "memory") && nb != nil {
 			findRes, err := nb.Find(ctx, notebook.FindInput{Query: in.Query})
 			if err == nil {
 				result["memory"] = findRes
